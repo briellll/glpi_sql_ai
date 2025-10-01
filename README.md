@@ -1,6 +1,6 @@
 # 🤖 GLPI SQL AI
 
-Um assistente de IA que utiliza LangChain e modelos de linguagem da OpenAI para traduzir perguntas em linguagem natural para consultas SQL e interagir com um banco de dados GLPI.
+Um bot de IA **interativo** que permite fazer perguntas em linguagem natural a um banco de dados GLPI e receber respostas precisas diretamente no seu terminal.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-0.1.0-F54D00?style=for-the-badge)
@@ -18,6 +18,7 @@ Um assistente de IA que utiliza LangChain e modelos de linguagem da OpenAI para 
 ## ✨ Funcionalidades
 
 - **Consultas em Linguagem Natural:** Pergunte ao bot "quantos chamados atrasados existem?" em vez de escrever SQL.
+- **Interface de Chat Interativa:** Converse com o bot diretamente no seu terminal em uma sessão contínua.
 - **Engenharia de Prompt Robusta:** Utiliza um prompt de sistema detalhado com um "Dicionário de Termos de Negócio" para garantir a precisão das queries geradas.
 - **Arquitetura Modular:** O projeto é organizado em módulos com responsabilidades separadas (configuração, prompts, chains), seguindo as convenções de desenvolvimento Python.
 - **Integração com GLPI:** Focado e otimizado para a estrutura de banco de dados do sistema de chamados GLPI.
@@ -90,14 +91,38 @@ DB_PASSWORD=""
 
 ## ▶️ Como Usar
 
-Para executar a aplicação, utilize o comando abaixo a partir da pasta raiz do projeto. O Poetry garantirá que o ambiente virtual correto seja utilizado.
+Ao executar o comando abaixo, a aplicação iniciará uma sessão de chat interativa no seu terminal. Você verá um prompt `Você: ` esperando pela sua pergunta.
 
 ```bash
 poetry run python -m glpi_sql_ai.main
 ```
 
-O script irá executar as perguntas pré-definidas no arquivo `main.py` e imprimir os resultados no terminal.
+### Exemplo de Interação
+
+```
+▶️  Iniciando a aplicação...
+================================================================================
+🤖 Olá! Sou seu assistente de banco de dados GLPI.
+   Faça uma pergunta sobre os chamados ou digite 'sair' para terminar.
+================================================================================
+Você: quantos chamados atrasados existem?
+🤖 Assistente: Atualmente, existem 48 chamados atrasados para o setor de TI em 2025.
+--------------------------------------------------------------------------------
+Você: qual o top requerente para o setor de TI?
+🤖 Assistente: O top requerente para o setor de TI é o usuário "alberto.oliveira", com um total de 100 requisições.
+--------------------------------------------------------------------------------
+Você: sair
+🤖 Até a próxima!
+```
+
+### Saindo da Aplicação
+
+Para encerrar a sessão de chat, digite um dos seguintes comandos e pressione Enter:
+- `sair`
+- `exit`
+- `quit`
+- `fim`
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT.
