@@ -1,0 +1,35 @@
+# Arquivos de segredo e ambiente
+.env
+.venv
+venv/
+env/
+
+# Cache e arquivos compilados do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pastas de instalação e distribuição
+build/
+dist/
+*.egg-info/
+wheels/
+
+# Arquivos de IDEs e editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de teste e cobertura de código
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
