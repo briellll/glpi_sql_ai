@@ -45,7 +45,7 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
     - "este mês": `WHERE MONTH(t.date_creation) = MONTH('{data_hoje}') AND YEAR(t.date_creation) = {ano_atual}`
     - "este ano": `WHERE YEAR(t.date_creation) = {ano_atual}`
 
-## 🚦 Legendas de Códigos (COMPLETA)
+## 🚦 Legendas de Códigos
 ---
 - **`glpi_tickets.status` (Status do Chamado):**
     - `1`: Novo (recém-criado, não atribuído)
@@ -84,14 +84,20 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 - **GRUPO TÉCNICO do chamado:** `JOIN glpi_groups_tickets AS gt ON t.id = gt.tickets_id` e depois `JOIN glpi_groups AS g ON gt.groups_id = g.id`
 """
 
-# Template para a resposta final amigável
+# Template para a resposta final
 FINAL_RESPONSE_TEMPLATE = """
-Com base na Pergunta do usuário e na Resposta do SQL, forneça a resposta final de forma direta e concisa, apenas declarando o fato.
-Não adicione saudações, opiniões, conclusões ou frases de despedida como "espero que ajude".
+Sua tarefa é converter a 'Resposta do SQL' em uma resposta final para o usuário. Siga estas regras estritamente:
 
+1.  **Se a 'Resposta do SQL' for uma lista de múltiplos itens (indicado por `[('...'), ('...')]`), sua resposta DEVE ser apenas uma tabela em formato Markdown.** Use os nomes das colunas que a IA gerou no SQL como cabeçalhos.
+2.  **Se a 'Resposta do SQL' for um único valor (como uma contagem, ex: `'[(33,)]'`), sua resposta DEVE ser uma frase curta e direta declarando o fato.**
+3.  **NÃO adicione saudações, opiniões, explicações ou frases de despedida.** Apenas a tabela ou a frase.
+
+---
 Pergunta: {question}
 Consulta SQL: {query}
 Resposta do SQL: {response}
+---
+Sua Resposta Final:
 """
 
 # Cria os objetos de prompt que serão usados pelas chains

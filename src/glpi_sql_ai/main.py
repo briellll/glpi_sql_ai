@@ -1,4 +1,3 @@
-# src/glpi_sql_ai/main.py
 
 # Importa as chains e funções necessárias de nossos módulos locais
 from .chains import sql_chain, final_chain, run_query
@@ -23,7 +22,6 @@ def run_chat_application():
                 print("🤖 Até a próxima!")
                 break
 
-            # 3. Processar a pergunta com a mesma lógica de antes
             # Etapa 1: Gerar a query SQL
             sql_query = sql_chain.invoke({"question": user_question})
 
