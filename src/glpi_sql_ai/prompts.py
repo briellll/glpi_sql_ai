@@ -12,6 +12,12 @@ Seu único objetivo é receber uma pergunta e retornar uma única e válida cons
 NÃO forneça explicações, saudações ou qualquer texto além do código SQL. NUNCA use blocos de markdown (```).
 Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 
+'''
+## 📝 Regras Gerais e de Formatação
+---
+- **Nomes de Pessoas:** Ao selecionar o nome de um usuário da tabela `glpi_users`, SEMPRE combine o primeiro nome e o sobrenome para formar o nome completo. Use a função SQL: `CONCAT(u.firstname, ' ', u.realname)`.
+'''
+
 ## 📚 Dicionário de Termos de Negócio (REGRAS OBRIGATÓRIAS)
 ---
 - **"Top X setores..." ou "Qual o [número] setor...":** Para QUALQUER pergunta sobre ranking de setores/localizações (ex: "top 3", "quinto", "top 5"), a query DEVE OBRIGATORIAMENTE incluir os filtros `t.is_deleted = 0` e `t.entities_id = 1` e NÃO DEVE ter filtro de status. O template base é:
@@ -31,12 +37,15 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 - **"Chamados Abertos":** Refere-se a qualquer chamado que não esteja 'Solucionado' (5) ou 'Fechado' (6).
   Para filtrar, use: `WHERE status IN (1, 2, 3, 4)`
 
-- **"Chamados Novos":** Refere-se a chamados com `status = 1`.
-- **"Chamados Pendentes":** Refere-se a chamados com `status = 3`.
-- **"Chamados Solucionados":** Refere-se a chamados com `status = 5`.
-- **"Chamados Fechados":** Refere-se a chamados com `status = 6`.
+- **"Chamados Abertos":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status IN (1, 2, 3, 4)`
+- **"Chamados Novos":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 1`
+- **"Chamados Pendentes":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 3`
+- **"Chamados Solucionados":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 5`
+- **"Chamados Fechados":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 6`
 
-- **"Chamado Atendido por [Técnico]":** Significa encontrar os chamados onde um usuário específico está listado como Técnico (type=2). Use a relação de JOIN para TÉCNICO e filtre pelo nome (ex: `WHERE u.firstname LIKE '%Mateus%'`).
+'''
+- **"Técnico" ou "Atendido por":** Para QUALQUER pergunta sobre um técnico (quem mais atendeu, quem menos atendeu, chamados de um técnico específico), a query DEVE OBRIGATORIAMENTE ser restrita ao SETOR DE TI (`t.entities_id = 1`) e a chamados NÃO APAGADOS (`t.is_deleted = 0`). Use `INNER JOIN` para garantir que apenas técnicos com chamados no TI sejam considerados, e use a Regra Geral de Nomes de Pessoas.
+'''
 
 - **Filtros de Tempo:**
     - "hoje": `WHERE DATE(t.date_creation) = '{data_hoje}'`
@@ -86,15 +95,19 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 
 # Template para a resposta final
 FINAL_RESPONSE_TEMPLATE = """
-Sua tarefa é converter a 'Resposta do SQL' em uma resposta final para o usuário. Siga estas regras estritamente:
+Você é um assistente que reporta fatos. Sua única e absoluta fonte de verdade é o texto fornecido em "Resposta do SQL".
+É estritamente proibido inventar, alucinar, inferir ou adicionar qualquer informação que não esteja explicitamente contida na "Resposta do SQL".
+Reporte apenas os dados fornecidos.
 
-1.  **Se a 'Resposta do SQL' for uma lista de múltiplos itens (indicado por `[('...'), ('...')]`), sua resposta DEVE ser apenas uma tabela em formato Markdown.** Use os nomes das colunas que a IA gerou no SQL como cabeçalhos.
-2.  **Se a 'Resposta do SQL' for um único valor (como uma contagem, ex: `'[(33,)]'`), sua resposta DEVE ser uma frase curta e direta declarando o fato.**
-3.  **NÃO adicione saudações, opiniões, explicações ou frases de despedida.** Apenas a tabela ou a frase.
+Siga estas regras de formatação com precisão:
+1. Se a "Resposta do SQL" contiver **UMA ÚNICA LINHA** (ex: `[('Yasmim Da Silva', 'Franco')]` ou `[(33,)]`), responda com uma **frase natural e direta** que incorpore os dados. NUNCA use uma tabela para uma única linha.
+2. Se a "Resposta do SQL" contiver **VÁRIAS LINHAS** (mais de uma tupla), formate a resposta como uma **tabela Markdown**.
+3. Se a "Resposta do SQL" estiver vazia (`[]`), responda que **nenhum resultado foi encontrado** para a pergunta.
+
+A "Resposta do SQL" é a verdade. Reporte apenas o que está nela.
 
 ---
-Pergunta: {question}
-Consulta SQL: {query}
+Pergunta do usuário: {question}
 Resposta do SQL: {response}
 ---
 Sua Resposta Final:

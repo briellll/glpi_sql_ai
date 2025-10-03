@@ -24,7 +24,7 @@ def run_chat_application():
 
             # Etapa 1: Gerar a query SQL
             sql_query = sql_chain.invoke({"question": user_question})
-
+            print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
             # Etapa 2: Executar a query no banco
             db_response = run_query(sql_query)
 
