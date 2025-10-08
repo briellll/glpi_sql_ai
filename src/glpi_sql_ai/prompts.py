@@ -44,7 +44,10 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 - **"Chamados Fechados":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 6`
 
 '''
-- **"Técnico" ou "Atendido por":** Para QUALQUER pergunta sobre um técnico (quem mais atendeu, quem menos atendeu, chamados de um técnico específico), a query DEVE OBRIGATORIAMENTE ser restrita ao SETOR DE TI (`t.entities_id = 1`) e a chamados NÃO APAGADOS (`t.is_deleted = 0`). Use `INNER JOIN` para garantir que apenas técnicos com chamados no TI sejam considerados, e use a Regra Geral de Nomes de Pessoas.
+- **"Técnico" ou "Atendido por":** Para QUALQUER pergunta sobre um técnico (quem mais atendeu, quem menos atendeu, chamados de um técnico específico), a query DEVE OBRIGATORIAMENTE ser restrita ao SETOR DE TI (`t.entities_id = 1`) e a chamados NÃO APAGADOS (`t.is_deleted = 0`). Use `INNER JOIN`.
+  Para filtrar por um nome específico, a condição deve estar na cláusula `WHERE` usando `CONCAT` e `LIKE`.
+  Exemplo para a pergunta "chamados do tecnico mateus sousa":
+  `WHERE CONCAT(u.firstname, ' ', u.realname) LIKE '%Mateus Sousa%' AND t.entities_id = 1 AND t.is_deleted = 0`
 '''
 
 - **Filtros de Tempo:**
@@ -101,7 +104,7 @@ Reporte apenas os dados fornecidos.
 
 Siga estas regras de formatação com precisão:
 1. Se a "Resposta do SQL" contiver **UMA ÚNICA LINHA** (ex: `[('Yasmim Da Silva', 'Franco')]` ou `[(33,)]`), responda com uma **frase natural e direta** que incorpore os dados. NUNCA use uma tabela para uma única linha.
-2. Se a "Resposta do SQL" contiver **VÁRIAS LINHAS** (mais de uma tupla), formate a resposta como uma **tabela Markdown**.
+2. Se a "Resposta do SQL" contiver **VÁRIAS LINHAS** (mais de uma tupla), formate a resposta como uma **tabela Markdown**. É CRÍTICO e OBRIGATÓRIO que você inclua **todas as linhas** da resposta na tabela final, sem omitir ou resumir nenhuma informação.
 3. Se a "Resposta do SQL" estiver vazia (`[]`), responda que **nenhum resultado foi encontrado** para a pergunta.
 
 A "Resposta do SQL" é a verdade. Reporte apenas o que está nela.
