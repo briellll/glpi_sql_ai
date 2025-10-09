@@ -1,6 +1,7 @@
 from datetime import datetime
 from langchain_core.prompts import ChatPromptTemplate
 
+
 def get_system_instructions() -> str:
     """Retorna o prompt de sistema completo com as regras de negócio."""
     from datetime import datetime
@@ -13,7 +14,7 @@ NÃO forneça explicações, saudações ou qualquer texto além do código SQL.
 Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 
 '''
-## 📝 Regras Gerais e de Formatação
+## 🔍 Regras Gerais e de Formatação
 ---
 - **Nomes de Pessoas:** Ao selecionar o nome de um usuário da tabela `glpi_users`, SEMPRE combine o primeiro nome e o sobrenome para formar o nome completo. Use a função SQL: `CONCAT(u.firstname, ' ', u.realname)`.
 '''
@@ -96,6 +97,34 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 - **GRUPO TÉCNICO do chamado:** `JOIN glpi_groups_tickets AS gt ON t.id = gt.tickets_id` e depois `JOIN glpi_groups AS g ON gt.groups_id = g.id`
 """
 
+
+def get_intent_classifier_instructions() -> str:
+    """Prompt para a LLM classificar a intenção do usuário."""
+    return """Você é um classificador de intenções de chatbot. Sua tarefa é analisar a pergunta do usuário e determinar qual é sua intenção.
+
+Você deve responder com APENAS uma das seguintes opções:
+- "database_query": se o usuário quer consultar dados do banco (ex: "quantos chamados abertos?", "top 5 técnicos", "mostrar chamados do João")
+- "get_solutions": se o usuário quer obter soluções para um problema específico de um chamado (ex: "quais são as soluções para o chamado 123?", "como resolver o chamado 456?", "me dê ideias para o ticket 789")
+
+Responda APENAS com uma dessas duas palavras, sem explicação adicional."""
+
+
+def get_solutions_instructions() -> str:
+    """Retorna o prompt de sistema para a geração de soluções."""
+    return """Você é um especialista em suporte técnico e resolução de problemas de TI.
+Sua tarefa é analisar os detalhes de um chamado de suporte e fornecer possíveis soluções práticas e acionáveis.
+
+Use seu conhecimento técnico para sugerir:
+1. Passos imediatos que o técnico pode tomar
+2. Causas raiz comuns para esse tipo de problema
+3. Procedimentos de diagnóstico recomendados
+4. Soluções alternativas se a solução primária não funcionar
+5. Referências a documentação ou recursos externos quando relevante
+
+Forneça as soluções de forma estruturada e clara, numerando cada uma delas.
+Considere a prioridade, urgência e impacto do chamado ao formular suas recomendações."""
+
+
 # Template para a resposta final
 FINAL_RESPONSE_TEMPLATE = """
 Você é um assistente que reporta fatos. Sua única e absoluta fonte de verdade é o texto fornecido em "Resposta do SQL".
@@ -116,6 +145,26 @@ Resposta do SQL: {response}
 Sua Resposta Final:
 """
 
+# Template para sugestões de soluções
+SOLUTIONS_RESPONSE_TEMPLATE = """
+Baseando-se nos detalhes do chamado abaixo, forneça possíveis soluções para resolver o problema:
+
+Detalhes do Chamado:
+- ID: {ticket_id}
+- Título: {title}
+- Descrição: {description}
+- Categoria: {category}
+- Prioridade: {priority}
+- Urgência: {urgency}
+- Impacto: {impact}
+- Status: {status}
+
+Pergunta do usuário: {question}
+
+Por favor, forneça de 3 a 5 soluções práticas e acionáveis, considerando o contexto técnico do chamado.
+Estruture as soluções de forma clara e numerada.
+"""
+
 # Cria os objetos de prompt que serão usados pelas chains
 sql_prompt = ChatPromptTemplate.from_messages(
     [
@@ -125,3 +174,17 @@ sql_prompt = ChatPromptTemplate.from_messages(
 )
 
 final_prompt = ChatPromptTemplate.from_template(FINAL_RESPONSE_TEMPLATE)
+
+solutions_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", get_solutions_instructions()),
+        ("human", SOLUTIONS_RESPONSE_TEMPLATE),
+    ]
+)
+
+intent_classifier_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", get_intent_classifier_instructions()),
+        ("human", "{question}"),
+    ]
+)
