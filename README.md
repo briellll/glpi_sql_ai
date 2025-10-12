@@ -1,19 +1,15 @@
 
 ---
 
-```markdown
 # 🤖 GLPI SQL AI
 
-Um **assistente de IA interativo** que entende perguntas em **linguagem natural** sobre o banco de dados **GLPI**, gera a **query SQL automaticamente**, executa-a e responde em **português natural** — tudo direto no seu **terminal**.
-
-Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes** para chamados específicos, combinando **informações da base de conhecimento do GLPI (API REST)** com o raciocínio do modelo de linguagem.
+Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o banco de dados **GLPI**, gera a **query SQL automaticamente**, executa-a e responde em **português natural** — tudo direto no seu **terminal**.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-🔥-orange?style=for-the-badge)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--3.5--Turbo-412991?style=for-the-badge\&logo=openai)
 ![Poetry](https://img.shields.io/badge/Poetry-1.5+-60A5FA?style=for-the-badge\&logo=poetry\&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-Database-00758F?style=for-the-badge\&logo=mysql\&logoColor=white)
-![GLPI](https://img.shields.io/badge/GLPI-API--REST-3CB043?style=for-the-badge)
 
 ---
 
@@ -38,19 +34,16 @@ Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes**
   Faça perguntas como “quantos chamados atrasados existem?” — e receba respostas completas sem escrever uma linha de SQL.
 
 * 🧩 **Classificação Automática de Intenção**
-  O modelo entende se você quer **consultar dados do banco** ou **gerar soluções para um chamado específico**.
+  O modelo entende se você quer **consultar dados** ou **gerar soluções para um chamado específico**.
 
-* 🧠 **Integração com a Base de Conhecimento do GLPI (API REST)**
-  Conecta-se automaticamente à base de conhecimento, busca artigos relevantes e combina as informações com a resposta da IA.
-
-* 💡 **Geração de Soluções Técnicas Inteligentes**
-  A IA interpreta o contexto de um chamado (prioridade, impacto, urgência, categoria) e propõe **3 a 5 soluções práticas e acionáveis**.
-
-* 🔐 **Configuração Segura com `.env`**
-  Todas as credenciais (API Key, DB, GLPI Token) são gerenciadas de forma isolada e segura.
+* 🧠 **Engenharia de Prompt Avançada**
+  Inclui um “Dicionário de Termos de Negócio” e um mapa detalhado das tabelas do GLPI, garantindo queries mais precisas e contextualizadas.
 
 * 🧱 **Arquitetura Modular e Escalável**
-  Código dividido em módulos independentes — `config`, `prompts`, `chains`, `services`, `knowledge_base` e `main` — seguindo boas práticas de engenharia.
+  O código é dividido em módulos independentes — `config`, `prompts`, `chains`, `services`, `main` — seguindo padrões de boas práticas em Python.
+
+* 🔌 **Integração com o GLPI**
+  Totalmente adaptado à estrutura de dados do sistema de chamados GLPI (MySQL).
 
 ---
 
@@ -60,7 +53,7 @@ Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes**
 | ---------------------------- | -------------------------------------------------- | ------------------------ | ----------------------------------- |
 | 🧩 `sql_chain`               | Gera o código SQL a partir da pergunta do usuário  | Pergunta natural         | Query SQL pura                      |
 | 🧠 `final_chain`             | Converte o resultado do banco em resposta natural  | Resultado SQL            | Texto em português                  |
-| 💡 `solutions_chain`         | Gera soluções técnicas para chamados específicos   | ID + detalhes do chamado | Lista de soluções                   |
+| 💡 `solutions_chain`         | Sugere soluções para chamados específicos          | ID + detalhes do chamado | Lista de soluções                   |
 | 🎯 `intent_classifier_chain` | Determina o tipo de pergunta (consulta ou solução) | Pergunta natural         | “database_query” ou “get_solutions” |
 
 ---
@@ -68,21 +61,18 @@ Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes**
 ## 🏗️ Estrutura do Projeto
 
 ```
-
 glpi-sql-ai/
 ├── .env                      # Configurações de ambiente (chaves e DB)
 ├── pyproject.toml            # Dependências e metadata do Poetry
 └── src/
-└── glpi_sql_ai/
-├── **init**.py
-├── config.py         # Conexão com o MySQL, LLM e Base de Conhecimento GLPI
-├── knowledge_base.py # Busca e processamento de artigos da Base de Conhecimento via API REST
-├── prompts.py        # Definição dos templates de prompts e dicionário de regras SQL
-├── chains.py         # Montagem das LangChains e funções auxiliares de execução
-├── services.py       # Lógica de negócio: classificação, queries e soluções
-└── main.py           # Loop principal do chatbot interativo no terminal
-
-````
+    └── glpi_sql_ai/
+        ├── __init__.py
+        ├── config.py         # Conexão com o MySQL e inicialização do LLM
+        ├── prompts.py        # Definição dos templates de prompts
+        ├── chains.py         # Construção das LangChains e funções auxiliares
+        ├── services.py       # Lógica de negócio e manipulação de respostas
+        └── main.py           # Loop principal da aplicação (chat interativo)
+```
 
 ---
 
@@ -92,9 +82,8 @@ glpi-sql-ai/
 * 📦 **Poetry** — gerenciamento de pacotes e ambientes virtuais
 * 🧠 **LangChain** — orquestração de prompts e execução das chains
 * 🤖 **OpenAI GPT-3.5-Turbo** — modelo de linguagem principal
-* 🗄️ **MySQL** — banco de dados GLPI
+* 🗄️ **MySQL** — banco de dados do GLPI
 * 🌿 **dotenv** — gerenciamento seguro de variáveis de ambiente
-* 🔗 **GLPI API REST** — integração direta com a base de conhecimento
 
 ---
 
@@ -104,11 +93,11 @@ glpi-sql-ai/
 
 * Python 3.11+
 * Poetry instalado
+
   ```bash
   pip install poetry
-````
-
-* Acesso a um banco de dados GLPI MySQL ativo
+  ```
+* Acesso a um banco GLPI MySQL ativo
 
 ---
 
@@ -140,13 +129,7 @@ DB_HOST="localhost"
 DB_NAME="glpi"
 DB_USER="root"
 DB_PASSWORD="senha"
-
-GLPI_URL="http://localhost/glpi"
-GLPI_USER_TOKEN="seu_token_aqui"
 ```
-
-> ⚠️ Se `GLPI_URL` ou `GLPI_USER_TOKEN` não forem definidos, o sistema ainda funcionará,
-> mas as soluções não terão contexto da base de conhecimento.
 
 ---
 
@@ -171,8 +154,6 @@ Você: quantos chamados atrasados existem?
 🤖 Assistente: Existem atualmente 48 chamados atrasados no setor de TI.
 --------------------------------------------------------------------------------
 Você: soluções para o chamado 1205
-🔍 Buscando detalhes do chamado 1205...
-📚 Buscando informações na base de conhecimento...
 💡 Soluções Sugeridas:
 1. Verificar logs de erro do equipamento.
 2. Confirmar se o chamado está atribuído corretamente.
@@ -193,9 +174,8 @@ flowchart TD
     C --> D[Execução no MySQL]
     D --> E[Formatação da resposta com final_chain]
     B -->|get_solutions| F[Busca detalhes do chamado]
-    F --> G[Consulta a Base de Conhecimento do GLPI]
-    G --> H[Geração de soluções técnicas]
-    E & H --> I[Exibe resposta no terminal]
+    F --> G[Geração de soluções técnicas]
+    E & G --> H[Exibe resposta no terminal]
 ```
 
 ---
@@ -236,8 +216,3 @@ Sinta-se livre para usar, modificar e contribuir!
 
 ---
 
-```
-
----
-
-```
