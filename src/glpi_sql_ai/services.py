@@ -1,8 +1,7 @@
 """
-services.py
-
 Módulo responsável pela lógica de negócio da aplicação.
 Contém funções para classificar intenções, processar consultas e gerar soluções.
+Integra informações da base de conhecimento do GLPI.
 """
 
 import re
@@ -16,6 +15,8 @@ from .chains import (
     run_query,
     get_ticket_details,
 )
+from .knowledge_base import get_knowledge_base_context
+from .config import kb
 
 
 def extract_ticket_id(question: str) -> str | None:
@@ -86,6 +87,9 @@ def process_solutions_request(question: str) -> None:
     """
     Processa uma solicitação de soluções para um chamado específico.
 
+    Integra informações da base de conhecimento do GLPI com o conhecimento
+    próprio da LLM para fornecer soluções mais precisas e contextualizadas.
+
     Args:
         question: Pergunta do usuário contendo ID do chamado
     """
@@ -109,7 +113,31 @@ def process_solutions_request(question: str) -> None:
         print("-" * 80)
         return
 
-    print(f"📋 Gerando soluções para o chamado {ticket_id}...\n")
+    # ===== NOVO: Busca informações na base de conhecimento =====
+    print(f"📚 Buscando informações na base de conhecimento...")
+    kb_context = ""
+
+    if kb:
+        kb_content = get_knowledge_base_context(
+            kb,
+            ticket_info["category"],
+            ticket_info["description"]
+        )
+        if kb_content != "NÃO_ENCONTRADO":
+            kb_context = kb_content
+        else:
+            kb_context = (
+                "**Observação da Base de Conhecimento:** "
+                "Nenhuma informação específica foi encontrada na base de conhecimento "
+                "do GLPI para este tipo de problema."
+            )
+    else:
+        kb_context = (
+            "**Observação:** A base de conhecimento do GLPI não está disponível "
+            "no momento. As soluções serão baseadas apenas no conhecimento da IA."
+        )
+
+    print(f"💡 Gerando soluções para o chamado {ticket_id}...\n")
 
     solutions = solutions_chain.invoke({
         "ticket_id": ticket_info["ticket_id"],
@@ -121,6 +149,7 @@ def process_solutions_request(question: str) -> None:
         "impact": ticket_info["impact"],
         "status": ticket_info["status"],
         "question": question,
+        "kb_context": kb_context,
     })
 
     print(f"💡 Soluções Sugeridas:\n{solutions}")
@@ -131,11 +160,14 @@ def process_database_query(question: str) -> None:
     """
     Processa uma consulta de banco de dados.
 
+    Converte a pergunta em linguagem natural para uma query SQL válida,
+    executa no banco de dados e formata a resposta de forma legível.
+
     Args:
         question: Pergunta do usuário a ser convertida em SQL
     """
     sql_query = sql_chain.invoke({"question": question})
-    #print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
+    # print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
 
     db_response = run_query(sql_query)
 

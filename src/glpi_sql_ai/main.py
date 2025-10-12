@@ -1,6 +1,4 @@
 """
-main.py
-
 Ponto de entrada da aplicação. Contém apenas o loop principal do chatbot.
 """
 

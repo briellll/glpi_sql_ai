@@ -1,3 +1,8 @@
+"""
+Módulo responsável por definir todos os prompts utilizados pelas chains da LLM.
+Contém templates e funções para construir prompts estruturados.
+"""
+
 from datetime import datetime
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -110,11 +115,22 @@ Responda APENAS com uma dessas duas palavras, sem explicação adicional."""
 
 
 def get_solutions_instructions() -> str:
-    """Retorna o prompt de sistema para a geração de soluções."""
+    """Retorna o prompt de sistema para a geração de soluções com suporte à base de conhecimento."""
     return """Você é um especialista em suporte técnico e resolução de problemas de TI.
 Sua tarefa é analisar os detalhes de um chamado de suporte e fornecer possíveis soluções práticas e acionáveis.
 
-Use seu conhecimento técnico para sugerir:
+**IMPORTANTE:** Você receberá informações da base de conhecimento do GLPI na seção "Contexto da Base de Conhecimento".
+
+Se houver informações disponíveis na base de conhecimento:
+1. Priorize e destaque as soluções encontradas na base de conhecimento
+2. Referencie explicitamente os artigos da base de conhecimento
+3. Use o formato: "De acordo com a base de conhecimento: [conteúdo]"
+
+Se NÃO houver informações na base de conhecimento:
+1. Deixe claro na resposta: "Não identifiquei nenhuma informação a respeito disso na base de conhecimento do GLPI."
+2. Forneça soluções baseadas em seu próprio conhecimento técnico
+
+Ao fornecer soluções, inclua:
 1. Passos imediatos que o técnico pode tomar
 2. Causas raiz comuns para esse tipo de problema
 3. Procedimentos de diagnóstico recomendados
@@ -125,7 +141,8 @@ Forneça as soluções de forma estruturada e clara, numerando cada uma delas.
 Considere a prioridade, urgência e impacto do chamado ao formular suas recomendações."""
 
 
-# Template para a resposta final
+# ========== TEMPLATES DE RESPOSTA ==========
+
 FINAL_RESPONSE_TEMPLATE = """
 Você é um assistente que reporta fatos. Sua única e absoluta fonte de verdade é o texto fornecido em "Resposta do SQL".
 É estritamente proibido inventar, alucinar, inferir ou adicionar qualquer informação que não esteja explicitamente contida na "Resposta do SQL".
@@ -145,7 +162,6 @@ Resposta do SQL: {response}
 Sua Resposta Final:
 """
 
-# Template para sugestões de soluções
 SOLUTIONS_RESPONSE_TEMPLATE = """
 Baseando-se nos detalhes do chamado abaixo, forneça possíveis soluções para resolver o problema:
 
@@ -159,13 +175,17 @@ Detalhes do Chamado:
 - Impacto: {impact}
 - Status: {status}
 
+{kb_context}
+
 Pergunta do usuário: {question}
 
 Por favor, forneça de 3 a 5 soluções práticas e acionáveis, considerando o contexto técnico do chamado.
 Estruture as soluções de forma clara e numerada.
 """
 
-# Cria os objetos de prompt que serão usados pelas chains
+
+# ========== CRIAÇÃO DOS OBJETOS PROMPT ==========
+
 sql_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", get_system_instructions()),
