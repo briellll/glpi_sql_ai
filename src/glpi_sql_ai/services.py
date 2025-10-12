@@ -135,7 +135,7 @@ def process_database_query(question: str) -> None:
         question: Pergunta do usuário a ser convertida em SQL
     """
     sql_query = sql_chain.invoke({"question": question})
-    print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
+    #print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
 
     db_response = run_query(sql_query)
 
