@@ -1,8 +1,3 @@
-Com certeza\! Deixar a documentação tinindo é a alma do negócio. Um bom `README` é o cartão de visitas de qualquer projeto.
-
-Fiz as atualizações necessárias para refletir a integração com a Base de Conhecimento, mantendo o máximo possível da estrutura e texto originais, exatamente como você pediu. As mudanças foram focadas nas seções de **Funcionalidades, Arquitetura, Estrutura do Projeto, Configuração e Fluxo da Aplicação**.
-
-Aqui está o seu `README.md` atualizado:
 
 -----
 
