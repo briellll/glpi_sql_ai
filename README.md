@@ -9,7 +9,7 @@ Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o b
 
 ## 📖 Sumário
 
-  * [✨ Funcionalidades](https://www.google.com/search?q=%23-funcionalidades)
+  * [✨ Funcionalidades]([https://www.google.com/search?q=%23-funcionalidades](https://github.com/briellll/glpi_sql_ai?tab=readme-ov-file#-funcionalidades))
   * [🧠 Arquitetura de Chains](https://www.google.com/search?q=%23-arquitetura-de-chains)
   * [🏗️ Estrutura do Projeto](https://www.google.com/search?q=%23%EF%B8%8F-estrutura-do-projeto)
   * [🛠️ Tecnologias Utilizadas](https://www.google.com/search?q=%23%EF%B8%8F-tecnologias-utilizadas)
