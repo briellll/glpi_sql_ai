@@ -9,16 +9,16 @@ Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o b
 
 ## 📖 Sumário
 
-  * [✨ Funcionalidades](https://www.google.com/search?q=%23-funcionalidades)
-  * [🧠 Arquitetura de Chains](https://www.google.com/search?q=%23-arquitetura-de-chains)
-  * [🏗️ Estrutura do Projeto](https://www.google.com/search?q=%23%EF%B8%8F-estrutura-do-projeto)
-  * [🛠️ Tecnologias Utilizadas](https://www.google.com/search?q=%23%EF%B8%8F-tecnologias-utilizadas)
-  * [⚙️ Instalação e Configuração](https://www.google.com/search?q=%23%EF%B8%8F-instala%C3%A7%C3%A3o-e-configura%C3%A7%C3%A3o)
-  * [🚀 Como Usar](https://www.google.com/search?q=%23-como-usar)
-  * [🧩 Fluxo da Aplicação](https://www.google.com/search?q=%23-fluxo-da-aplica%C3%A7%C3%A3o)
-  * [💡 Exemplos de Perguntas](https://www.google.com/search?q=%23-exemplos-de-perguntas)
-  * [🤝 Como Contribuir](https://www.google.com/search?q=%23-como-contribuir)
-  * [📄 Licença](https://www.google.com/search?q=%23-licen%C3%A7a)
+  * [✨ Funcionalidades]
+  * [🧠 Arquitetura de Chains]
+  * [🏗️ Estrutura do Projeto]
+  * [🛠️ Tecnologias Utilizadas]
+  * [⚙️ Instalação e Configuração]
+  * [🚀 Como Usar]
+  * [🧩 Fluxo da Aplicação]
+  * [💡 Exemplos de Perguntas]
+  * [🤝 Como Contribuir]
+  * [📄 Licença]
 
 -----
 
