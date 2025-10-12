@@ -3,7 +3,7 @@
 
 Um **assistente de IA interativo** que entende perguntas em **linguagem natural** sobre o banco de dados **GLPI**, gera a **query SQL automaticamente**, executa-a e responde em **português natural** — tudo direto no terminal.
 
-Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes para chamados específicos**, combinando **informações do GLPI** com **conhecimento extraído automaticamente da base de conhecimento (KB)**.
+Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes** para chamados específicos, combinando informações do GLPI com a base de conhecimento.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-🔥-orange?style=for-the-badge)
@@ -16,38 +16,38 @@ Além disso, o sistema é capaz de **sugerir soluções técnicas inteligentes p
 
 ## 📖 Sumário
 
-- [✨ Funcionalidades](#-funcionalidades)
-- [🧠 Arquitetura de Inteligência](#-arquitetura-de-inteligência)
-- [🏗️ Estrutura do Projeto](#️-estrutura-do-projeto)
-- [🛠️ Tecnologias Utilizadas](#️-tecnologias-utilizadas)
-- [⚙️ Instalação e Configuração](#️-instalação-e-configuração)
-- [🚀 Como Usar](#-como-usar)
-- [🧩 Fluxo da Aplicação](#-fluxo-da-aplicação)
-- [💡 Exemplos de Perguntas](#-exemplos-de-perguntas)
-- [🤝 Como Contribuir](#-como-contribuir)
-- [📄 Licença](#-licença)
+- [Funcionalidades](#-funcionalidades)
+- [Arquitetura de Inteligência](#-arquitetura-de-inteligência)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [Instalação e Configuração](#-instalação-e-configuração)
+- [Como Usar](#-como-usar)
+- [Fluxo da Aplicação](#-fluxo-da-aplicação)
+- [Exemplos de Perguntas](#-exemplos-de-perguntas)
+- [Como Contribuir](#-como-contribuir)
+- [Licença](#-licença)
 
 ---
 
 ## ✨ Funcionalidades
 
-* 💬 **Consultas em Linguagem Natural**
-  Faça perguntas como “quantos chamados atrasados existem?” e receba respostas completas — sem escrever SQL.
+💬 **Consultas em Linguagem Natural**
+Faça perguntas como “quantos chamados atrasados existem?” e receba respostas completas — sem escrever SQL.
 
-* 🧩 **Classificação Automática de Intenção**
-  O sistema entende se você quer **consultar dados do banco** ou **gerar soluções técnicas** para um chamado.
+🧩 **Classificação Automática de Intenção**
+O sistema entende se você quer **consultar dados do banco** ou **gerar soluções técnicas** para um chamado.
 
-* 🧠 **Integração com a Base de Conhecimento do GLPI (KB)**
-  Conecta-se via **API REST**, busca artigos relacionados ao problema e combina essas informações com o raciocínio da IA.
+📚 **Integração com a Base de Conhecimento do GLPI (KB)**
+Conecta-se via **API REST**, busca artigos relacionados e combina essas informações com o raciocínio da IA.
 
-* 💡 **Geração de Soluções Inteligentes**
-  Com base nos detalhes de um chamado e no conteúdo da KB, o assistente propõe de **3 a 5 soluções técnicas**, estruturadas e práticas.
+💡 **Geração de Soluções Inteligentes**
+Com base nos detalhes de um chamado e no conteúdo da KB, o assistente propõe de **3 a 5 soluções técnicas** práticas.
 
-* 🔐 **Configuração Segura por `.env`**
-  Mantém chaves e credenciais de forma isolada e segura.
+🔐 **Configuração Segura por `.env`**
+Mantém chaves e credenciais de forma isolada e segura.
 
-* 🧱 **Arquitetura Modular e Escalável**
-  Cada módulo tem uma função clara: configuração, prompts, chains, lógica de negócio e ponto de entrada.
+🏗️ **Arquitetura Modular e Escalável**
+Cada módulo tem uma função clara: configuração, prompts, chains, lógica de negócio e ponto de entrada.
 
 ---
 
@@ -96,7 +96,7 @@ glpi-sql-ai/
 
 ## ⚙️ Instalação e Configuração
 
-### 1. Pré-requisitos
+### 1️⃣ Pré-requisitos
 
 - Python 3.11+
 - Poetry instalado:
@@ -108,7 +108,7 @@ glpi-sql-ai/
 
 ---
 
-### 2. Clonar o Repositório
+### 2️⃣ Clonar o Repositório
 
 ```bash
 git clone https://github.com/seu-usuario/glpi-sql-ai.git
@@ -117,7 +117,7 @@ cd glpi-sql-ai
 
 ---
 
-### 3. Instalar as Dependências
+### 3️⃣ Instalar as Dependências
 
 ```bash
 poetry install
@@ -125,7 +125,7 @@ poetry install
 
 ---
 
-### 4. Configurar o Ambiente
+### 4️⃣ Configurar o Ambiente
 
 Crie o arquivo `.env` com:
 
