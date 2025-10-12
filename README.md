@@ -1,137 +1,144 @@
+Com certeza\! Deixar a documentação tinindo é a alma do negócio. Um bom `README` é o cartão de visitas de qualquer projeto.
 
----
+Fiz as atualizações necessárias para refletir a integração com a Base de Conhecimento, mantendo o máximo possível da estrutura e texto originais, exatamente como você pediu. As mudanças foram focadas nas seções de **Funcionalidades, Arquitetura, Estrutura do Projeto, Configuração e Fluxo da Aplicação**.
+
+Aqui está o seu `README.md` atualizado:
+
+-----
 
 # 🤖 GLPI SQL AI
 
 Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o banco de dados **GLPI**, gera a **query SQL automaticamente**, executa-a e responde em **português natural** — tudo direto no seu **terminal**.
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
-![LangChain](https://img.shields.io/badge/LangChain-🔥-orange?style=for-the-badge)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--3.5--Turbo-412991?style=for-the-badge\&logo=openai)
-![Poetry](https://img.shields.io/badge/Poetry-1.5+-60A5FA?style=for-the-badge\&logo=poetry\&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-Database-00758F?style=for-the-badge\&logo=mysql\&logoColor=white)
-
----
+-----
 
 ## 📖 Sumário
 
-* [✨ Funcionalidades](#-funcionalidades)
-* [🧠 Arquitetura de Chains](#-arquitetura-de-chains)
-* [🏗️ Estrutura do Projeto](#️-estrutura-do-projeto)
-* [🛠️ Tecnologias Utilizadas](#️-tecnologias-utilizadas)
-* [⚙️ Instalação e Configuração](#️-instalação-e-configuração)
-* [🚀 Como Usar](#-como-usar)
-* [🧩 Fluxo da Aplicação](#-fluxo-da-aplicação)
-* [💡 Exemplos de Perguntas](#-exemplos-de-perguntas)
-* [🤝 Como Contribuir](#-como-contribuir)
-* [📄 Licença](#-licença)
+  * [✨ Funcionalidades](https://www.google.com/search?q=%23-funcionalidades)
+  * [🧠 Arquitetura de Chains](https://www.google.com/search?q=%23-arquitetura-de-chains)
+  * [🏗️ Estrutura do Projeto](https://www.google.com/search?q=%23%EF%B8%8F-estrutura-do-projeto)
+  * [🛠️ Tecnologias Utilizadas](https://www.google.com/search?q=%23%EF%B8%8F-tecnologias-utilizadas)
+  * [⚙️ Instalação e Configuração](https://www.google.com/search?q=%23%EF%B8%8F-instala%C3%A7%C3%A3o-e-configura%C3%A7%C3%A3o)
+  * [🚀 Como Usar](https://www.google.com/search?q=%23-como-usar)
+  * [🧩 Fluxo da Aplicação](https://www.google.com/search?q=%23-fluxo-da-aplica%C3%A7%C3%A3o)
+  * [💡 Exemplos de Perguntas](https://www.google.com/search?q=%23-exemplos-de-perguntas)
+  * [🤝 Como Contribuir](https://www.google.com/search?q=%23-como-contribuir)
+  * [📄 Licença](https://www.google.com/search?q=%23-licen%C3%A7a)
 
----
+-----
 
 ## ✨ Funcionalidades
 
-* 💬 **Consultas em Linguagem Natural**
-  Faça perguntas como “quantos chamados atrasados existem?” — e receba respostas completas sem escrever uma linha de SQL.
+  * 💬 **Consultas em Linguagem Natural**
+    Faça perguntas como “quantos chamados atrasados existem?” — e receba respostas completas sem escrever uma linha de SQL.
 
-* 🧩 **Classificação Automática de Intenção**
-  O modelo entende se você quer **consultar dados** ou **gerar soluções para um chamado específico**.
+  * 🧩 **Classificação Automática de Intenção**
+    O modelo entende se você quer **consultar dados** ou **gerar soluções para um chamado específico**.
 
-* 🧠 **Engenharia de Prompt Avançada**
-  Inclui um “Dicionário de Termos de Negócio” e um mapa detalhado das tabelas do GLPI, garantindo queries mais precisas e contextualizadas.
+  * 📚 **Integração com a Base de Conhecimento GLPI**
+    Enriquece as sugestões de solução com artigos e tutoriais diretamente da sua `Knowbase` do GLPI, fornecendo contexto do mundo real.
 
-* 🧱 **Arquitetura Modular e Escalável**
-  O código é dividido em módulos independentes — `config`, `prompts`, `chains`, `services`, `main` — seguindo padrões de boas práticas em Python.
+  * 🧠 **Engenharia de Prompt Avançada**
+    Inclui um “Dicionário de Termos de Negócio” e um mapa detalhado das tabelas do GLPI, garantindo queries mais precisas e contextualizadas.
 
-* 🔌 **Integração com o GLPI**
-  Totalmente adaptado à estrutura de dados do sistema de chamados GLPI (MySQL).
+  * 🧱 **Arquitetura Modular e Escalável**
+    O código é dividido em módulos independentes — `config`, `prompts`, `chains`, `services`, `knowledge_base` e `main` — seguindo padrões de boas práticas em Python.
 
----
+  * 🔌 **Integração com o GLPI**
+    Totalmente adaptado à estrutura de dados do sistema de chamados GLPI (MySQL) e sua API REST para a Base de Conhecimento.
+
+-----
 
 ## 🧠 Arquitetura de Chains
 
-| Chain                        | Função                                             | Entrada                  | Saída                               |
-| ---------------------------- | -------------------------------------------------- | ------------------------ | ----------------------------------- |
-| 🧩 `sql_chain`               | Gera o código SQL a partir da pergunta do usuário  | Pergunta natural         | Query SQL pura                      |
-| 🧠 `final_chain`             | Converte o resultado do banco em resposta natural  | Resultado SQL            | Texto em português                  |
-| 💡 `solutions_chain`         | Sugere soluções para chamados específicos          | ID + detalhes do chamado | Lista de soluções                   |
-| 🎯 `intent_classifier_chain` | Determina o tipo de pergunta (consulta ou solução) | Pergunta natural         | “database_query” ou “get_solutions” |
+| Chain                   | Função                                                               | Entrada                                  | Saída                               |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------- |
+| 🧩 `sql_chain`          | Gera o código SQL a partir da pergunta do usuário                    | Pergunta natural                         | Query SQL pura                      |
+| 🧠 `final_chain`        | Converte o resultado do banco em resposta natural                    | Resultado SQL                            | Texto em português                  |
+| 💡 `solutions_chain`    | Gera soluções, **priorizando** o contexto da Base de Conhecimento    | Detalhes do chamado + Contexto da KB     | Lista de soluções                   |
+| 🎯 `intent_classifier_chain` | Determina o tipo de pergunta (consulta ou solução)                 | Pergunta natural                         | “database\_query” ou “get\_solutions” |
 
----
+-----
 
 ## 🏗️ Estrutura do Projeto
 
 ```
 glpi-sql-ai/
-├── .env                      # Configurações de ambiente (chaves e DB)
-├── pyproject.toml            # Dependências e metadata do Poetry
+├── .env                       # Configurações de ambiente (chaves, DB, GLPI API)
+├── pyproject.toml             # Dependências e metadata do Poetry
 └── src/
     └── glpi_sql_ai/
         ├── __init__.py
-        ├── config.py         # Conexão com o MySQL e inicialização do LLM
-        ├── prompts.py        # Definição dos templates de prompts
-        ├── chains.py         # Construção das LangChains e funções auxiliares
-        ├── services.py       # Lógica de negócio e manipulação de respostas
-        └── main.py           # Loop principal da aplicação (chat interativo)
+        ├── config.py            # Conexão com DB, LLM e KB
+        ├── prompts.py           # Definição dos templates de prompts
+        ├── chains.py            # Construção das LangChains
+        ├── knowledge_base.py    # Módulo de acesso à Base de Conhecimento do GLPI
+        ├── services.py          # Lógica de negócio e orquestração
+        └── main.py              # Loop principal da aplicação (chat interativo)
 ```
 
----
+-----
 
 ## 🛠️ Tecnologias Utilizadas
 
-* 🐍 **Python 3.11+**
-* 📦 **Poetry** — gerenciamento de pacotes e ambientes virtuais
-* 🧠 **LangChain** — orquestração de prompts e execução das chains
-* 🤖 **OpenAI GPT-3.5-Turbo** — modelo de linguagem principal
-* 🗄️ **MySQL** — banco de dados do GLPI
-* 🌿 **dotenv** — gerenciamento seguro de variáveis de ambiente
+  * 🐍 **Python 3.11+**
+  * 📦 **Poetry** — gerenciamento de pacotes e ambientes virtuais
+  * 🧠 **LangChain** — orquestração de prompts e execução das chains
+  * 🤖 **OpenAI GPT-3.5-Turbo** — modelo de linguagem principal
+  * 🗄️ **MySQL** — banco de dados do GLPI
+  * 🌐 **Requests** — para comunicação com a API REST do GLPI
+  * 🌿 **dotenv** — gerenciamento seguro de variáveis de ambiente
 
----
+-----
 
 ## ⚙️ Instalação e Configuração
 
-### 1. Pré-requisitos
+### 1\. Pré-requisitos
 
-* Python 3.11+
-* Poetry instalado
+  * Python 3.11+
+  * Poetry instalado
+  * Acesso a um banco GLPI MySQL ativo
+  * Acesso à API REST do GLPI com um token de usuário
 
-  ```bash
-  pip install poetry
-  ```
-* Acesso a um banco GLPI MySQL ativo
+-----
 
----
-
-### 2. Clonar o Repositório
+### 2\. Clonar o Repositório
 
 ```bash
 git clone https://github.com/seu-usuario/glpi-sql-ai.git
 cd glpi-sql-ai
 ```
 
----
+-----
 
-### 3. Instalar as Dependências
+### 3\. Instalar as Dependências
 
 ```bash
 poetry install
 ```
 
----
+-----
 
-### 4. Configurar o Ambiente
+### 4\. Configurar o Ambiente
 
 Crie um arquivo `.env` na raiz com:
 
 ```env
+# Chave da OpenAI
 OPENAI_API_KEY="sua_chave_aqui"
 
+# Credenciais do Banco de Dados
 DB_HOST="localhost"
 DB_NAME="glpi"
 DB_USER="root"
 DB_PASSWORD="senha"
+
+# Credenciais da API do GLPI (para Base de Conhecimento)
+GLPI_URL="http://seu-glpi/glpi"
+GLPI_USER_TOKEN="seu_token_de_usuario_api"
 ```
 
----
+-----
 
 ## 🚀 Como Usar
 
@@ -145,6 +152,7 @@ poetry run python -m glpi_sql_ai.main
 
 ```
 ▶️  Iniciando a aplicação...
+✅ 152 artigos da Base de Conhecimento carregados.
 ================================================================================
 🤖 Olá! Sou seu assistente de banco de dados GLPI.
    Faça uma pergunta sobre os chamados ou digite 'sair' para terminar.
@@ -154,16 +162,23 @@ Você: quantos chamados atrasados existem?
 🤖 Assistente: Existem atualmente 48 chamados atrasados no setor de TI.
 --------------------------------------------------------------------------------
 Você: soluções para o chamado 1205
+🤔 Analisando sua pergunta...
+📚 Buscando informações na base de conhecimento...
+💡 Gerando soluções para o chamado 1205...
+
 💡 Soluções Sugeridas:
-1. Verificar logs de erro do equipamento.
-2. Confirmar se o chamado está atribuído corretamente.
-3. Reabrir o ticket se houver inconsistência no status.
+De acordo com a base de conhecimento:
+**Artigo 1:** Problemas de Conexão de Impressora de Rede
+1. Verifique o cabo de rede e o ponto de conexão.
+2. Tente pingar o endereço IP da impressora a partir do computador do usuário.
+3. Reinicie o spooler de impressão no Windows (services.msc).
+...
 --------------------------------------------------------------------------------
 Você: sair
 🤖 Até a próxima!
 ```
 
----
+-----
 
 ## 🧩 Fluxo da Aplicação
 
@@ -173,12 +188,15 @@ flowchart TD
     B -->|database_query| C[Geração da query SQL]
     C --> D[Execução no MySQL]
     D --> E[Formatação da resposta com final_chain]
-    B -->|get_solutions| F[Busca detalhes do chamado]
-    F --> G[Geração de soluções técnicas]
-    E & G --> H[Exibe resposta no terminal]
+
+    B -->|get_solutions| F[Busca detalhes do chamado no DB]
+    F --> G[Consulta Base de Conhecimento via API]
+    G --> H[Geração de soluções com `solutions_chain`]
+
+    E & H --> I[Exibe resposta no terminal]
 ```
 
----
+-----
 
 ## 💡 Exemplos de Perguntas
 
@@ -186,33 +204,30 @@ flowchart TD
 | -------------- | ----------------------------------------------- |
 | 🔍 Consultas   | “Quantos chamados estão abertos?”               |
 | 📊 Ranking     | “Top 5 técnicos com mais chamados solucionados” |
-| ⏰ Atrasos      | “Quantos chamados atrasados existem este mês?”  |
-| 👨‍💻 Técnicos | “Chamados do técnico Mateus Sousa”              |
+| ⏰ Atrasos     | “Quantos chamados atrasados existem este mês?”  |
+| 👨‍💻 Técnicos   | “Chamados do técnico Mateus Sousa”              |
 | 🧯 Soluções    | “Soluções para o chamado 2331”                  |
 
----
+-----
 
 ## 🤝 Como Contribuir
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature:
+1.  Faça um fork do projeto
+2.  Crie uma branch para sua feature:
+    ```bash
+    git checkout -b feature/nova-funcionalidade
+    ```
+3.  Faça o commit das mudanças:
+    ```bash
+    git commit -m "feat: adiciona nova funcionalidade"
+    ```
+4.  Envie o PR 🎉
 
-   ```bash
-   git checkout -b feature/nova-funcionalidade
-   ```
-3. Faça o commit das mudanças:
-
-   ```bash
-   git commit -m "feat: adiciona nova funcionalidade"
-   ```
-4. Envie o PR 🎉
-
----
+-----
 
 ## 📄 Licença
 
 Distribuído sob a licença **MIT**.
-Sinta-se livre para usar, modificar e contribuir!
+Sinta-se livre para usar, modificar e contribuir\!
 
----
-
+-----
