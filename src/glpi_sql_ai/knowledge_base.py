@@ -159,7 +159,6 @@ def get_knowledge_base_context(
 ) -> str:
     """
     Busca contexto da base de conhecimento baseado na categoria e descrição.
-    (LÓGICA DE BUSCA CORRIGIDA E RESTAURADA)
 
     Args:
         kb: Instância de GLPIKnowledgeBase.
@@ -169,9 +168,8 @@ def get_knowledge_base_context(
     Returns:
         String com conteúdo relevante da KB ou um aviso padrão se nada for encontrado.
     """
-    # Restaurando a lógica de busca original e mais eficaz
     search_terms = [
-        problem_description[:60],  # Aumentei um pouco para mais contexto
+        problem_description[:60],
         category,
         problem_description.split()[0] if problem_description else "",
     ]

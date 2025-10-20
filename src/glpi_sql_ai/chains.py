@@ -41,7 +41,7 @@ def get_ticket_details(ticket_id: str) -> str:
 # Chain 1: Responsável apenas por gerar o código SQL.
 sql_chain = sql_prompt | llm | StrOutputParser()
 
-# Chain 2: Responsável por pegar os dados e formular a resposta final em português.
+# Chain 2: Responsável por pegar os dados e formular a resposta final.
 final_chain = final_prompt | llm | StrOutputParser()
 
 # Chain 3: Responsável por gerar soluções baseadas no contexto do chamado.
