@@ -77,7 +77,6 @@ class GLPIKnowledgeBase:
 
         return False
 
-    # No arquivo knowledge_base.py
 
     def search_articles(self, query: str, limit: int = 5) -> list[dict]:
         if not self.all_articles or not query:
@@ -111,7 +110,7 @@ class GLPIKnowledgeBase:
                     "score": score
                 })
 
-        # 4. O Pulo do Gato: Ordena a lista do maior Score para o menor (Ranking)
+        # 4. Ordena a lista do maior Score para o menor (Ranking)
         scored_results.sort(key=lambda x: x["score"], reverse=True)
 
         # 5. Retorna apenas os 'limit' melhores artigos para a IA ler
