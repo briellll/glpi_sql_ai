@@ -120,6 +120,7 @@ def process_solutions_request(question: str) -> None:
     if kb:
         kb_content = get_knowledge_base_context(
             kb,
+            ticket_info['title'],
             ticket_info["category"],
             ticket_info["description"]
         )
@@ -167,7 +168,7 @@ def process_database_query(question: str) -> None:
         question: Pergunta do usuário a ser convertida em SQL
     """
     sql_query = sql_chain.invoke({"question": question})
-    # print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
+    #print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
 
     db_response = run_query(sql_query)
 
@@ -176,5 +177,5 @@ def process_database_query(question: str) -> None:
         "response": db_response,
     })
 
-    print(f"🤖 Assistente: {final_answer}")
+    print(f"🤖 Assistente:\n{final_answer}")
     print("-" * 80)

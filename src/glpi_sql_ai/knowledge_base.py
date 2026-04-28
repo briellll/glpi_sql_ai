@@ -77,33 +77,45 @@ class GLPIKnowledgeBase:
 
         return False
 
+    # No arquivo knowledge_base.py
+
     def search_articles(self, query: str, limit: int = 5) -> list[dict]:
-        """
-        Busca artigos na base de conhecimento por palavras-chave (busca local).
-
-        Args:
-            query: Termo de busca.
-            limit: Número máximo de resultados (padrão: 5).
-
-        Returns:
-            Lista de dicionários com artigos encontrados.
-        """
         if not self.all_articles or not query:
             return []
 
-        query_lower = query.lower()
-        results = []
+        # 1. Filtro rigoroso de palavras irrelevantes
+        ignore_words = {"sem", "com", "para", "de", "do", "da", "me", "ajuda", "erro", "ao", "na", "no"}
+        tokens = [w.lower() for w in query.split() if len(w) > 2 and w.lower() not in ignore_words]
 
+        if not tokens:
+            return []
+
+        scored_results = []
+
+        # 2. Avaliação de Relevância (Scoring)
         for article in self.all_articles:
             name = article.get("name", "").lower()
             answer = article.get("answer", "").lower()
 
-            if query_lower in name or query_lower in answer:
-                results.append(article)
-                if len(results) >= limit:
-                    break
+            score = 0
+            for word in tokens:
+                if word in name:
+                    score += 3  # Peso Ouro: Se a palavra está no Título, vale 3 pontos!
+                if word in answer:
+                    score += 1  # Peso Prata: Se está no corpo do texto, vale 1 ponto.
 
-        return results
+            # 3. Se o artigo pontuou, entra para a lista de candidatos
+            if score > 0:
+                scored_results.append({
+                    "article": article,
+                    "score": score
+                })
+
+        # 4. O Pulo do Gato: Ordena a lista do maior Score para o menor (Ranking)
+        scored_results.sort(key=lambda x: x["score"], reverse=True)
+
+        # 5. Retorna apenas os 'limit' melhores artigos para a IA ler
+        return [item["article"] for item in scored_results[:limit]]
 
     def get_article_content(self, article_id: int) -> Optional[dict]:
         """
@@ -154,55 +166,26 @@ class GLPIKnowledgeBase:
         return False
 
 
-def get_knowledge_base_context(
-    kb: GLPIKnowledgeBase, category: str, problem_description: str
-) -> str:
-    """
-    Busca contexto da base de conhecimento baseado na categoria e descrição.
-
-    Args:
-        kb: Instância de GLPIKnowledgeBase.
-        category: Categoria do chamado.
-        problem_description: Descrição do problema.
-
-    Returns:
-        String com conteúdo relevante da KB ou um aviso padrão se nada for encontrado.
-    """
-    search_terms = [
-        problem_description[:60],
-        category,
-        problem_description.split()[0] if problem_description else "",
-    ]
+def get_knowledge_base_context(kb, title, category, description) -> str:
+    # Agora buscamos pelo TÍTULO e pela DESCRIÇÃO separadamente para aumentar o Recall
+    search_terms = [title, description[:60]]
 
     results = []
     processed_ids = set()
 
     for term in search_terms:
-        if term and len(term) > 2:
-            articles = kb.search_articles(term, limit=3)
-            for article in articles:
-                article_id = article.get("id")
-                if article_id and article_id not in processed_ids:
-                    article_detail = kb.get_article_content(article_id)
-                    if article_detail:
-                        answer = article_detail.get("answer", "")
-                        clean_content = re.sub(r'<[^>]+>', '', answer)
-                        clean_content = re.sub(r'\s+', ' ', clean_content).strip()
+        articles = kb.search_articles(term)
+        for art in articles:
+            if art['id'] not in processed_ids:
+                detail = kb.get_article_content(art['id'])
+                if detail:
+                    results.append({"title": detail['name'], "content": detail['answer']})
+                    processed_ids.add(art['id'])
 
-                        results.append({
-                            "title": article_detail.get("name", "Sem Título"),
-                            "content": clean_content,
-                        })
-                        processed_ids.add(article_id)
+    if not results: return "NÃO_ENCONTRADO"
 
-    if not results:
-        return "NÃO_ENCONTRADO"
-
-    # Formata o contexto para ser enviado ao LLM
-    kb_context = "## Informações da Base de Conhecimento do GLPI:\n\n"
-    for i, item in enumerate(results[:3], 1):  # Limita a 3 artigos
-        kb_context += f"**Artigo {i}:** {item['title']}\n"
-        content_preview = item['content'][:500]
-        kb_context += f"{content_preview}...\n\n"
-
-    return kb_context
+    context = "## Informações da Base de Conhecimento do GLPI:\n\n"
+    for i, item in enumerate(results[:3], 1):
+        clean_content = re.sub(r'<[^>]+>', '', item['content']) # Limpa HTML
+        context += f"**Artigo {i}:** {item['title']}\n{clean_content[:500]}...\n\n"
+    return context
