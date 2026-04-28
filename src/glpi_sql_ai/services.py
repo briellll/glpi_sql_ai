@@ -113,7 +113,7 @@ def process_solutions_request(question: str) -> None:
         print("-" * 80)
         return
 
-    # ===== NOVO: Busca informações na base de conhecimento =====
+    # =====  Busca informações na base de conhecimento =====
     print(f"📚 Buscando informações na base de conhecimento...")
     kb_context = ""
 
