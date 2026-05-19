@@ -1,0 +1,39 @@
+# LaTeX auxiliares
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.vrb
+
+# PDF gerado (recompilável)
+*.pdf
+
+# Documento original Word (formato antigo)
+*.docx
+
+# Python (glpi_sql_ai)
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Arquivos temporários
+*.txt
