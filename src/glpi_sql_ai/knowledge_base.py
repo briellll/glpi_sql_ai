@@ -14,12 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class GLPIKnowledgeBase:
-    """Gerencia acesso à base de conhecimento do GLPI via API REST."""
+    """Gerencia acesso a base de conhecimento do GLPI via API REST."""
 
-    def __init__(self, glpi_url: str, user_token: str):
+    def __init__(self, glpi_url: str, user_token: str, app_token: str = ""):
         self.glpi_url = glpi_url.rstrip("/")
         self.user_token = user_token
-        self.headers = {"Content-Type": "application/json"}
+        self.app_token = app_token
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"user_token {user_token}",
+        }
+        if app_token:
+            self.headers["App-Token"] = app_token
         self.session_token = None
         self.all_articles = []
         self._init_session()
@@ -27,8 +33,7 @@ class GLPIKnowledgeBase:
     def _init_session(self) -> bool:
         try:
             url = f"{self.glpi_url}/apirest.php/initSession"
-            params = {"user_token": self.user_token}
-            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()

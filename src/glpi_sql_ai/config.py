@@ -77,6 +77,7 @@ class AppContext:
     def _init_knowledge_base(self):
         glpi_url = os.getenv("GLPI_URL")
         glpi_token = os.getenv("GLPI_USER_TOKEN")
+        glpi_app_token = os.getenv("GLPI_APP_TOKEN", "")
 
         if not glpi_url or not glpi_token:
             if self._vector_store and self._vector_store.is_populated:
@@ -94,7 +95,7 @@ class AppContext:
             return
 
         try:
-            self._kb = GLPIKnowledgeBase(glpi_url, glpi_token)
+            self._kb = GLPIKnowledgeBase(glpi_url, glpi_token, glpi_app_token)
 
             if (
                 self._kb.all_articles

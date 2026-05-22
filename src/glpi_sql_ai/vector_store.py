@@ -7,6 +7,11 @@ import logging
 import os
 from typing import Optional
 
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+
+# Suprime avisos de telemetria do ChromaDB (bug no PostHog interno)
+logging.getLogger("chromadb.telemetry").setLevel(logging.CRITICAL)
+
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
