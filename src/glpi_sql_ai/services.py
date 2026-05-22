@@ -4,19 +4,27 @@ Contém funções para classificar intenções, processar consultas e gerar solu
 Integra informações da base de conhecimento do GLPI.
 """
 
-import re
 import ast
+import logging
+import re
 
 from .chains import (
-    sql_chain,
-    final_chain,
-    solutions_chain,
-    intent_classifier_chain,
-    run_query,
+    create_final_chain,
+    create_intent_classifier_chain,
+    create_solutions_chain,
+    create_sql_chain,
     get_ticket_details,
+    run_query,
 )
+from .config import AppContext
 from .knowledge_base import get_knowledge_base_context
-from .config import kb
+from .prompts import (
+    get_intent_classifier_instructions,
+    get_solutions_instructions,
+    get_system_instructions,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def extract_ticket_id(question: str) -> str | None:
@@ -30,25 +38,9 @@ def extract_ticket_id(question: str) -> str | None:
         ID do chamado como string ou None se não encontrar
     """
     match = re.search(
-        r"(?:id\s*|chamado\s*|ticket\s*)?(\d+)",
-        question,
-        re.IGNORECASE
+        r"(?:id\s*|chamado\s*|ticket\s*)?(\d+)", question, re.IGNORECASE
     )
     return match.group(1) if match else None
-
-
-def classify_user_intent(question: str) -> str:
-    """
-    Usa a LLM para classificar a intenção do usuário.
-
-    Args:
-        question: Pergunta do usuário
-
-    Returns:
-        "database_query" ou "get_solutions"
-    """
-    intent = intent_classifier_chain.invoke({"question": question})
-    return intent.strip().lower()
 
 
 def parse_ticket_details(details_str: str) -> dict | None:
@@ -63,7 +55,6 @@ def parse_ticket_details(details_str: str) -> dict | None:
     """
     try:
         data = ast.literal_eval(details_str)
-
         if not data or not data[0]:
             return None
 
@@ -79,67 +70,90 @@ def parse_ticket_details(details_str: str) -> dict | None:
             "status": row[7] or "Desconhecido",
         }
     except Exception as e:
-        print(f"❌ Erro ao fazer parsing dos detalhes: {e}")
+        logger.error("Erro ao fazer parsing dos detalhes: %s", e)
         return None
 
 
-def process_solutions_request(question: str) -> None:
+def classify_user_intent(
+    ctx: AppContext, question: str, memory_context: str = ""
+) -> str:
+    """
+    Usa a LLM para classificar a intenção do usuário.
+
+    Args:
+        ctx: Contexto da aplicação com dependências
+        question: Pergunta do usuário
+        memory_context: Histórico da conversa para contexto
+
+    Returns:
+        "database_query" ou "get_solutions"
+    """
+    chain = create_intent_classifier_chain(ctx.llm_sql)
+    intent = chain.invoke({
+        "question": question,
+        "intent_instructions": get_intent_classifier_instructions(),
+        "memory_context": memory_context,
+    })
+    return intent.strip().lower()
+
+
+def process_solutions_request(
+    ctx: AppContext, question: str, memory_context: str = ""
+) -> str:
     """
     Processa uma solicitação de soluções para um chamado específico.
 
-    Integra informações da base de conhecimento do GLPI com o conhecimento
-    próprio da LLM para fornecer soluções mais precisas e contextualizadas.
-
     Args:
+        ctx: Contexto da aplicação com dependências
         question: Pergunta do usuário contendo ID do chamado
+        memory_context: Histórico da conversa para contexto
+
+    Returns:
+        Resposta gerada (string vazia em caso de erro)
     """
     ticket_id = extract_ticket_id(question)
 
     if not ticket_id:
-        print(
-            "⚠️  Não consegui identificar o ID do chamado. "
-            "Por favor, inclua o ID na sua pergunta (ex: 'soluções para o chamado 2233')."
+        msg = (
+            "[AVISO] Nao consegui identificar o ID do chamado. "
+            "Por favor, inclua o ID na sua pergunta "
+            "(ex: 'solucoes para o chamado 2233')."
         )
+        print(msg)
         print("-" * 80)
-        return
+        return msg
 
-    print(f"🔍 Buscando detalhes do chamado {ticket_id}...")
-    details_str = get_ticket_details(ticket_id)
-
+    print(f"[Busca] Buscando detalhes do chamado {ticket_id}...")
+    details_str = get_ticket_details(ctx.db, ticket_id)
     ticket_info = parse_ticket_details(details_str)
 
     if not ticket_info:
-        print(f"❌ Não consegui encontrar o chamado com ID {ticket_id}.")
+        msg = f"[ERRO] Nao consegui encontrar o chamado com ID {ticket_id}."
+        print(msg)
         print("-" * 80)
-        return
+        return msg
 
-    # =====  Busca informações na base de conhecimento =====
-    print(f"📚 Buscando informações na base de conhecimento...")
+    print("[KB] Buscando informacoes na base de conhecimento...")
     kb_context = ""
 
-    if kb:
-        kb_content = get_knowledge_base_context(
-            kb,
-            ticket_info['title'],
-            ticket_info["category"],
-            ticket_info["description"]
-        )
-        if kb_content != "NÃO_ENCONTRADO":
-            kb_context = kb_content
-        else:
-            kb_context = (
-                "**Observação da Base de Conhecimento:** "
-                "Nenhuma informação específica foi encontrada na base de conhecimento "
-                "do GLPI para este tipo de problema."
-            )
+    kb_content = get_knowledge_base_context(
+        ctx.vector_store,
+        ticket_info["title"],
+        ticket_info["category"],
+        ticket_info["description"],
+    )
+    if kb_content != "NÃO_ENCONTRADO":
+        kb_context = kb_content
     else:
         kb_context = (
-            "**Observação:** A base de conhecimento do GLPI não está disponível "
-            "no momento. As soluções serão baseadas apenas no conhecimento da IA."
+            "**Observação da Base de Conhecimento:** "
+            "Nenhuma informação específica foi encontrada na base de conhecimento "
+            "do GLPI para este tipo de problema."
         )
 
-    print(f"💡 Gerando soluções para o chamado {ticket_id}...\n")
+    print(f"[Solucoes] Gerando solucoes para o chamado {ticket_id}...\n")
 
+    solutions_chain = create_solutions_chain(ctx.llm_creative)
     solutions = solutions_chain.invoke({
         "ticket_id": ticket_info["ticket_id"],
         "title": ticket_info["title"],
@@ -151,31 +165,44 @@ def process_solutions_request(question: str) -> None:
         "status": ticket_info["status"],
         "question": question,
         "kb_context": kb_context,
+        "solutions_instructions": get_solutions_instructions(),
+        "memory_context": memory_context,
     })
 
-    print(f"💡 Soluções Sugeridas:\n{solutions}")
+    print(f"[Solucoes] Solucoes Sugeridas:\n{solutions}")
     print("-" * 80)
+    return solutions
 
 
-def process_database_query(question: str) -> None:
+def process_database_query(
+    ctx: AppContext, question: str, memory_context: str = ""
+) -> str:
     """
     Processa uma consulta de banco de dados.
 
-    Converte a pergunta em linguagem natural para uma query SQL válida,
-    executa no banco de dados e formata a resposta de forma legível.
-
     Args:
+        ctx: Contexto da aplicação com dependências
         question: Pergunta do usuário a ser convertida em SQL
-    """
-    sql_query = sql_chain.invoke({"question": question})
-    #print(f"🔍 SQL GERADO PELA IA:\n{sql_query}\n")
+        memory_context: Histórico da conversa para contexto
 
-    db_response = run_query(sql_query)
+    Returns:
+        Resposta gerada
+    """
+    sql_chain = create_sql_chain(ctx.llm_sql)
+    final_chain = create_final_chain(ctx.llm_sql)
+
+    sql_query = sql_chain.invoke({
+        "question": question,
+        "system_instructions": get_system_instructions(),
+        "memory_context": memory_context,
+    })
+    db_response = run_query(ctx.db, sql_query)
 
     final_answer = final_chain.invoke({
         "question": question,
         "response": db_response,
     })
 
-    print(f"🤖 Assistente:\n{final_answer}")
+    print(f"Assistente:\n{final_answer}")
     print("-" * 80)
+    return final_answer

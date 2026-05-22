@@ -1,51 +1,76 @@
 """
-Ponto de entrada da aplicação. Contém apenas o loop principal do chatbot.
+Ponto de entrada da aplicação.
+Contém apenas o loop principal do chatbot com inicialização explícita.
 """
 
-from .services import (
-    classify_user_intent,
-    process_solutions_request,
-    process_database_query,
+import logging
+import sys
+
+from .agents.supervisor import build_supervisor_graph
+from .config import AppContext
+from .memory import ConversationMemory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    stream=sys.stdout,
 )
+logger = logging.getLogger(__name__)
 
 
-def run_chat_application() -> None:
+def run_chat_application(ctx: AppContext, memory: ConversationMemory) -> None:
     """
-    Inicia um loop de chat interativo para consultar a base de dados.
+    Inicia um loop de chat interativo usando o grafo supervisor multiagente.
+
+    Args:
+        ctx: Contexto da aplicação com dependências inicializadas
+        memory: Memória conversacional entre turnos
     """
+    supervisor = build_supervisor_graph(ctx)
+
     print("=" * 80)
-    print("🤖 Olá! Sou seu assistente de banco de dados GLPI.")
-    print("   Faça uma pergunta sobre os chamados ou digite 'sair' para terminar.")
+    print("Ola! Sou seu assistente de banco de dados GLPI.")
+    print("   Faca uma pergunta sobre os chamados ou digite 'sair' para terminar.")
     print("=" * 80)
 
     while True:
         try:
-            user_question = input("Você: ")
+            user_question = input("Voce: ")
 
             if user_question.lower() in ["sair", "exit", "fim", "quit"]:
-                print("🤖 Até a próxima!")
+                print("Ate a proxima!")
                 break
 
-            print("🤔 Analisando sua pergunta...")
-            intent = classify_user_intent(user_question)
+            memory_context = memory.get_context()
 
-            if intent == "get_solutions":
-                process_solutions_request(user_question)
-            elif intent == "database_query":
-                process_database_query(user_question)
-            else:
-                print(f"⚠️  Não consegui entender sua intenção. Resposta: {intent}")
-                print("-" * 80)
+            print("Analisando sua pergunta...")
+            result = supervisor.invoke({
+                "question": user_question,
+                "memory_context": memory_context,
+            })
 
+            answer = result.get("answer", "[AVISO] Nao foi possivel gerar uma resposta.")
+            memory.add_turn(user_question, answer, result.get("intent", ""))
+
+        except KeyboardInterrupt:
+            print("\nAte a proxima!")
+            break
         except Exception as e:
             print(
-                f"\n❌ Ocorreu um erro ao processar sua pergunta: "
+                f"\n[ERRO] Ocorreu um erro ao processar sua pergunta: "
                 f"{type(e).__name__}: {e}"
             )
-            print("🤖 Por favor, tente fazer a pergunta de outra forma.")
+            print("Por favor, tente fazer a pergunta de outra forma.")
             print("-" * 80)
 
 
+def main() -> None:
+    """Ponto de entrada: inicializa contexto e inicia o chat."""
+    ctx = AppContext()
+    ctx.initialize()
+    memory = ConversationMemory()
+    run_chat_application(ctx, memory)
+
+
 if __name__ == "__main__":
-    print("▶️  Iniciando a aplicação...")
-    run_chat_application()
+    main()

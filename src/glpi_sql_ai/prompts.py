@@ -3,7 +3,6 @@ Módulo responsável por definir todos os prompts utilizados pelas chains da LLM
 Contém templates e funções para construir prompts estruturados.
 """
 
-from datetime import datetime
 from langchain_core.prompts import ChatPromptTemplate
 
 
@@ -116,29 +115,46 @@ Responda APENAS com uma dessas duas palavras, sem explicação adicional."""
 
 def get_solutions_instructions() -> str:
     """Retorna o prompt de sistema para a geração de soluções com suporte à base de conhecimento."""
-    return """Você é um especialista em suporte técnico e resolução de problemas de TI.
-Sua tarefa é analisar os detalhes de um chamado de suporte e fornecer possíveis soluções práticas e acionáveis.
+    return """Voce e um especialista em suporte tecnico e resolucao de problemas de TI.
 
-**IMPORTANTE:** Você receberá informações da base de conhecimento do GLPI na seção "Contexto da Base de Conhecimento".
+Sua unica fonte de verdade e a secao "Contexto da Base de Conhecimento" fornecida abaixo.
+REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base no conteudo dos artigos fornecidos nessa secao.
+NAO invente, NAO infira, NAO complemente com conhecimento proprio.
 
-Se houver informações disponíveis na base de conhecimento:
-1. Priorize e destaque as soluções encontradas na base de conhecimento
-2. Referencie explicitamente os artigos da base de conhecimento
-3. Use o formato: "De acordo com a base de conhecimento: [conteúdo]"
+Se a secao contiver "Nenhuma informacao especifica foi encontrada":
+- Informe exatamente: "Nao identifiquei nenhuma informacao a respeito disso na base de conhecimento do GLPI."
+- E PARE. Nao gere solucoes genericas.
 
-Se NÃO houver informações na base de conhecimento:
-1. Deixe claro na resposta: "Não identifiquei nenhuma informação a respeito disso na base de conhecimento do GLPI."
-2. Forneça soluções baseadas em seu próprio conhecimento técnico
+Se a secao contiver artigos da base de conhecimento:
+- Avalie se o artigo e RELEVANTE para o problema descrito no chamado (categoria, titulo, descricao).
+- Se o artigo NAO for relevante: informe "Nao identifiquei nenhuma informacao a respeito disso na base de conhecimento do GLPI." e PARE.
+- Se o artigo FOR relevante: reproduza FIELMENTE os passos e procedimentos descritos no artigo.
+  Numere os passos exatamente como estao no artigo original.
+  Cite o nome do artigo ao introduzir cada procedimento.
+  NAO adicione passos, recomendacoes ou diagnosticos que nao estejam no artigo.
 
-Ao fornecer soluções, inclua:
-1. Passos imediatos que o técnico pode tomar
-2. Causas raiz comuns para esse tipo de problema
-3. Procedimentos de diagnóstico recomendados
-4. Soluções alternativas se a solução primária não funcionar
-5. Referências a documentação ou recursos externos quando relevante
+Mantenha a resposta estruturada, clara e fiel ao conteudo da base de conhecimento."""
 
-Forneça as soluções de forma estruturada e clara, numerando cada uma delas.
-Considere a prioridade, urgência e impacto do chamado ao formular suas recomendações."""
+
+FIX_SQL_TEMPLATE = """
+Você gerou a query SQL abaixo para responder a pergunta do usuário:
+
+## Pergunta
+{question}
+
+## SQL gerado
+```
+{sql}
+```
+
+## Erro ao executar
+```
+{error}
+```
+
+Corrija a query SQL para resolver o erro. Mantenha o mesmo objetivo da consulta original.
+Retorne APENAS o SQL corrigido, sem formatação markdown, sem blocos de código, sem explicações.
+"""
 
 
 # ========== TEMPLATES DE RESPOSTA ==========
@@ -163,32 +179,36 @@ Sua Resposta Final:
 """
 
 SOLUTIONS_RESPONSE_TEMPLATE = """
-Baseando-se nos detalhes do chamado abaixo, forneça possíveis soluções para resolver o problema:
+Voce deve fornecer solucoes para o chamado abaixo, seguindo ESTRITAMENTE as instrucoes do sistema.
 
 Detalhes do Chamado:
 - ID: {ticket_id}
-- Título: {title}
-- Descrição: {description}
+- Titulo: {title}
+- Descricao: {description}
 - Categoria: {category}
 - Prioridade: {priority}
-- Urgência: {urgency}
+- Urgencia: {urgency}
 - Impacto: {impact}
 - Status: {status}
 
 {kb_context}
 
-Pergunta do usuário: {question}
+Pergunta do usuario: {question}
 
-Por favor, forneça de 3 a 5 soluções práticas e acionáveis, considerando o contexto técnico do chamado.
-Estruture as soluções de forma clara e numerada.
+IMPORTANTE: Reproduza fielmente os passos do artigo da base de conhecimento.
+Nao invente solucoes. Nao complemente com diagnostico generico.
 """
 
 
 # ========== CRIAÇÃO DOS OBJETOS PROMPT ==========
 
+# NOTA: system_instructions, intent_instructions e solutions_instructions
+# são passados como variáveis em tempo de invoke para permitir
+# injeção de {memory_context} e datas atualizadas dinamicamente.
+
 sql_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", get_system_instructions()),
+        ("system", "{system_instructions}\n\n{memory_context}"),
         ("human", "{question}"),
     ]
 )
@@ -197,14 +217,14 @@ final_prompt = ChatPromptTemplate.from_template(FINAL_RESPONSE_TEMPLATE)
 
 solutions_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", get_solutions_instructions()),
+        ("system", "{solutions_instructions}\n\n{memory_context}"),
         ("human", SOLUTIONS_RESPONSE_TEMPLATE),
     ]
 )
 
 intent_classifier_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", get_intent_classifier_instructions()),
+        ("system", "{intent_instructions}\n\n{memory_context}"),
         ("human", "{question}"),
     ]
 )

@@ -1,51 +1,59 @@
+"""
+Funções auxiliares e factories para criação das chains.
+Sem side effects em tempo de importação.
+"""
+
+import logging
+
 from langchain_core.output_parsers import StrOutputParser
 
-from .config import db, llm
-from .prompts import (
-    sql_prompt,
-    final_prompt,
-    solutions_prompt,
-    intent_classifier_prompt,
-)
-
-print("⚙️  Montando as chains de execução...")
-
-# --- FUNÇÕES AUXILIARES ---
-def run_query(query: str) -> str:
-    """Executa a query no banco após uma limpeza final."""
-    cleaned_query = query.strip().replace("```sql", "").replace("```", "").strip()
-    return db.run(cleaned_query)  # type: ignore
+logger = logging.getLogger(__name__)
 
 
-def get_ticket_details(ticket_id: str) -> str:
-    """Obtém os detalhes de um chamado específico pelo ID."""
-    query = f"""
+def create_sql_chain(llm):
+    from .prompts import sql_prompt
+
+    return sql_prompt | llm | StrOutputParser()
+
+
+def create_final_chain(llm):
+    from .prompts import final_prompt
+
+    return final_prompt | llm | StrOutputParser()
+
+
+def create_solutions_chain(llm):
+    from .prompts import solutions_prompt
+
+    return solutions_prompt | llm | StrOutputParser()
+
+
+def create_intent_classifier_chain(llm):
+    from .prompts import intent_classifier_prompt
+
+    return intent_classifier_prompt | llm | StrOutputParser()
+
+
+def run_query(db, query: str) -> str:
+    """Executa a query no banco após limpeza final."""
+    cleaned = query.strip().replace("```sql", "").replace("```", "").strip()
+    return db.run(cleaned)
+
+
+def get_ticket_details(db, ticket_id: str) -> str:
+    """Obtém detalhes de um chamado pelo ID com query parametrizada."""
+    query = """
     SELECT
         t.id,
         t.name,
         t.content,
-        c.name as category,
+        c.name AS category,
         t.priority,
         t.urgency,
         t.impact,
         t.status
     FROM glpi_tickets AS t
     LEFT JOIN glpi_itilcategories AS c ON t.itilcategories_id = c.id
-    WHERE t.id = {ticket_id} AND t.entities_id = 1 AND t.is_deleted = 0
+    WHERE t.id = :ticket_id AND t.entities_id = 1 AND t.is_deleted = 0
     """
-    return db.run(query)  # type: ignore
-
-
-# --- DEFINIÇÃO DAS CHAINS ---
-
-# Chain 1: Responsável apenas por gerar o código SQL.
-sql_chain = sql_prompt | llm | StrOutputParser()
-
-# Chain 2: Responsável por pegar os dados e formular a resposta final.
-final_chain = final_prompt | llm | StrOutputParser()
-
-# Chain 3: Responsável por gerar soluções baseadas no contexto do chamado.
-solutions_chain = solutions_prompt | llm | StrOutputParser()
-
-# Chain 4: Responsável por classificar a intenção do usuário.
-intent_classifier_chain = intent_classifier_prompt | llm | StrOutputParser()
+    return db.run(query, parameters={"ticket_id": ticket_id})
