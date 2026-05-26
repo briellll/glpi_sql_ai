@@ -4,13 +4,17 @@ Gerencia variáveis de ambiente, conexão com banco de dados e inicialização d
 Todas as inicializações são explícitas — sem side effects em tempo de importação.
 """
 
+import json
 import logging
 import os
+from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 from langchain_openai import ChatOpenAI
+from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 
 from .knowledge_base import GLPIKnowledgeBase
 from .vector_store import KBVectorStore
@@ -29,6 +33,79 @@ class AppContext:
         self._kb: Optional[GLPIKnowledgeBase] = None
         self._vector_store: Optional[KBVectorStore] = None
         self._initialized = False
+        self._sync_info_path: Path = (
+            Path(__file__).parent.parent.parent / "chroma_db" / ".sync_info.json"
+        )
+
+    # ------------------------------------------------------------------
+    # Controle de sincronizacao da base de conhecimento (evita API GLPI)
+    # ------------------------------------------------------------------
+
+    def _read_sync_info(self) -> dict:
+        try:
+            return json.loads(self._sync_info_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+
+    def _write_sync_info(self, info: dict) -> None:
+        self._sync_info_path.parent.mkdir(parents=True, exist_ok=True)
+        self._sync_info_path.write_text(json.dumps(info), encoding="utf-8")
+
+    def _check_kb_freshness(self) -> bool:
+        """Verifica via MySQL se artigos da KB mudaram desde o ultimo sync.
+
+        Retorna True se o cache vetorial esta atualizado (nao precisa chamar API GLPI).
+        Retorna False se nunca sincronizou, artigos mudaram, ou houve erro na verificacao.
+        """
+        if not self._db:
+            return False
+
+        try:
+            with self._db._engine.connect() as conn:
+                row = conn.execute(
+                    text(
+                        "SELECT COUNT(*) AS cnt, MAX(date_mod) AS max_mod "
+                        "FROM glpi_knowbaseitems"
+                    )
+                ).fetchone()
+                db_count: int = int(row[0] or 0)
+                db_max_mod: Optional[str] = str(row[1]) if row[1] else None
+        except Exception:
+            return False
+
+        if db_count == 0:
+            return True
+
+        sync = self._read_sync_info()
+        cached_count: int = sync.get("article_count", 0)
+        cached_max_mod: Optional[str] = sync.get("last_max_date_mod")
+
+        if cached_count == 0 or cached_max_mod is None:
+            return False
+
+        if db_count == cached_count and db_max_mod == cached_max_mod:
+            return True
+
+        return False
+
+    def _save_kb_sync_info(self) -> None:
+        """Grava metadados do sync atual apos sincronizacao bem-sucedida com a API GLPI."""
+        if not self._db:
+            return
+        try:
+            with self._db._engine.connect() as conn:
+                row = conn.execute(
+                    text(
+                        "SELECT COUNT(*) AS cnt, MAX(date_mod) AS max_mod "
+                        "FROM glpi_knowbaseitems"
+                    )
+                ).fetchone()
+            self._write_sync_info({
+                "article_count": int(row[0] or 0),
+                "last_max_date_mod": str(row[1]) if row[1] else None,
+            })
+        except Exception:
+            pass
 
     def initialize(self):
         """Inicializa todas as conexões explicitamente."""
@@ -52,7 +129,15 @@ class AppContext:
 
         logger.info("[DB] Conectando ao banco de dados...")
         db_uri = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}/{db_name}"
-        self._db = SQLDatabase.from_uri(db_uri)
+        self._db = SQLDatabase.from_uri(
+            db_uri,
+            engine_args={
+                "poolclass": NullPool,
+                "connect_args": {
+                    "connection_timeout": 10,
+                },
+            },
+        )
         logger.info("[DB] Banco de dados conectado com sucesso.")
 
     def _init_llm(self, api_key: str):
@@ -90,25 +175,40 @@ class AppContext:
                     "[AVISO] GLPI_URL ou GLPI_USER_TOKEN nao configurados no .env"
                 )
                 logger.warning(
-                    "   O sistema funcionará apenas com seu conhecimento próprio."
+                    "   O sistema funcionará apenas com seu conhecimento proprio."
                 )
             return
+
+        # Check de frescor via MySQL: se o cache vetorial ja tem os mesmos
+        # artigos que estao no banco, pula a API GLPI inteira.
+        if self._vector_store and self._vector_store.is_populated:
+            if self._check_kb_freshness():
+                logger.info(
+                    "[KB] Cache vetorial atualizado. "
+                    "Nenhuma chamada a API GLPI necessaria."
+                )
+                return
 
         try:
             self._kb = GLPIKnowledgeBase(glpi_url, glpi_token, glpi_app_token)
 
-            if (
-                self._kb.all_articles
-                and self._vector_store
-                and not self._vector_store.is_populated
-            ):
+            if self._kb.all_articles and self._vector_store:
+                if self._vector_store.is_populated:
+                    logger.info(
+                        "[KB] Artigos modificados detectados. Re-sincronizando..."
+                    )
                 self._vector_store.sync_from_glpi(self._kb)
+                self._save_kb_sync_info()
                 logger.info("[KB] Base de conhecimento indexada com sucesso.")
+            elif self._kb.all_articles:
+                logger.info(
+                    "[KB] Artigos carregados "
+                    "(busca por palavras-chave como fallback)."
+                )
+            elif self._vector_store and self._vector_store.is_populated:
+                logger.info("[KB] Nenhum artigo novo. Mantendo cache vetorial.")
             else:
-                if self._vector_store and self._vector_store.is_populated:
-                    logger.info("[KB] Base de conhecimento vetorial ja possui dados em cache.")
-                elif self._kb.all_articles:
-                    logger.info("[KB] Artigos carregados (busca por palavras-chave como fallback).")
+                logger.info("[KB] Nenhum artigo encontrado na base de conhecimento.")
         except Exception as e:
             logger.warning(
                 "[AVISO] Nao foi possivel conectar a base de conhecimento: %s", e
@@ -119,7 +219,7 @@ class AppContext:
                 )
             else:
                 logger.warning(
-                    "   O sistema funcionará apenas com seu conhecimento próprio."
+                    "   O sistema funcionara apenas com seu conhecimento proprio."
                 )
 
     @property
