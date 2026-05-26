@@ -1,6 +1,6 @@
 """
-Ponto de entrada da aplicação.
-Contém apenas o loop principal do chatbot com inicialização explícita.
+Ponto de entrada da aplicacao.
+Contem apenas o loop principal do chatbot com inicializacao explicita.
 """
 
 import logging
@@ -8,10 +8,17 @@ import sys
 
 from .agents.supervisor import build_supervisor_graph
 from .config import AppContext
+from .console import (
+    banner,
+    divider,
+    fail,
+    prompt_str,
+    status,
+)
 from .memory import ConversationMemory
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="%(message)s",
     stream=sys.stdout,
 )
@@ -23,45 +30,46 @@ def run_chat_application(ctx: AppContext, memory: ConversationMemory) -> None:
     Inicia um loop de chat interativo usando o grafo supervisor multiagente.
 
     Args:
-        ctx: Contexto da aplicação com dependências inicializadas
-        memory: Memória conversacional entre turnos
+        ctx: Contexto da aplicacao com dependencias inicializadas
+        memory: Memoria conversacional entre turnos
     """
     supervisor = build_supervisor_graph(ctx)
 
-    print("=" * 80)
-    print("Ola! Sou seu assistente de banco de dados GLPI.")
-    print("   Faca uma pergunta sobre os chamados ou digite 'sair' para terminar.")
-    print("=" * 80)
+    banner("GLPI SQL AI", "Pergunte sobre chamados ou peca solucoes tecnicas")
 
     while True:
         try:
-            user_question = input("Voce: ")
+            user_question = input(prompt_str())
 
             if user_question.lower() in ["sair", "exit", "fim", "quit"]:
-                print("Ate a proxima!")
+                status("OK", "Ate logo!", tag_color="\033[92m")
                 break
+
+            if not user_question.strip():
+                continue
 
             memory_context = memory.get_context()
 
-            print("Analisando sua pergunta...")
             result = supervisor.invoke({
                 "question": user_question,
                 "memory_context": memory_context,
             })
 
-            answer = result.get("answer", "[AVISO] Nao foi possivel gerar uma resposta.")
+            answer = result.get(
+                "answer",
+                "[AVISO] Nao foi possivel gerar uma resposta.",
+            )
             memory.add_turn(user_question, answer, result.get("intent", ""))
 
         except KeyboardInterrupt:
-            print("\nAte a proxima!")
+            print()
+            status("OK", "Ate logo!", tag_color="\033[92m")
             break
         except Exception as e:
-            print(
-                f"\n[ERRO] Ocorreu um erro ao processar sua pergunta: "
-                f"{type(e).__name__}: {e}"
-            )
-            print("Por favor, tente fazer a pergunta de outra forma.")
-            print("-" * 80)
+            print()
+            fail(f"{type(e).__name__}: {e}")
+            status("Dica", "Tente fazer a pergunta de outra forma.",
+                   tag_color="\033[93m")
 
 
 def main() -> None:

@@ -1,8 +1,8 @@
 """
-Solutions Worker Agent: processa pedidos de solução para chamados.
+Solutions Worker Agent: processa pedidos de solucao para chamados.
 
 Graph:
-  extract_ticket → get_details → search_kb → generate_solutions → END
+  extract_ticket -> get_details -> search_kb -> generate_solutions -> END
 """
 
 from typing import TypedDict
@@ -11,6 +11,7 @@ from langgraph.graph import END, StateGraph
 
 from ..chains import create_solutions_chain, get_ticket_details
 from ..config import AppContext
+from ..console import fail, result_box, status
 from ..knowledge_base import get_knowledge_base_context
 from ..prompts import get_solutions_instructions
 from ..services import extract_ticket_id, parse_ticket_details
@@ -26,38 +27,36 @@ class SolutionsWorkerState(TypedDict):
 
 
 def build_solutions_worker_graph(ctx: AppContext):
-    """Constrói o grafo do solutions worker."""
+    """Constroi o grafo do solutions worker."""
 
     def extract_ticket(state: SolutionsWorkerState) -> dict:
         ticket_id = extract_ticket_id(state["question"])
         if not ticket_id:
-            msg = (
-                "[AVISO] Nao consegui identificar o ID do chamado. "
-                "Por favor, inclua o ID na sua pergunta "
+            fail(
+                "Nao consegui identificar o ID do chamado. "
+                "Inclua o ID na sua pergunta "
                 "(ex: 'solucoes para o chamado 2233')."
             )
-            print(msg)
-            print("-" * 80)
-            return {"answer": msg}
-        print(f"[Busca] Buscando detalhes do chamado {ticket_id}...")
+            return {"answer": ""}
+        status("Busca", f"Localizando chamado #{ticket_id}...",
+               tag_color="\033[38;5;214m")
         return {"ticket_id": ticket_id}
 
     def get_details(state: SolutionsWorkerState) -> dict:
-        if state.get("answer"):
+        if state.get("answer") is not None and state.get("answer") != "":
             return {}
         details_str = get_ticket_details(ctx.db, state["ticket_id"])
         ticket_info = parse_ticket_details(details_str)
         if not ticket_info:
-            msg = f"[ERRO] Nao consegui encontrar o chamado com ID {state['ticket_id']}."
-            print(msg)
-            print("-" * 80)
-            return {"answer": msg}
+            fail(f"Chamado com ID {state['ticket_id']} nao encontrado.")
+            return {"answer": ""}
         return {"ticket_info": ticket_info}
 
     def search_kb(state: SolutionsWorkerState) -> dict:
-        if state.get("answer"):
+        if state.get("answer") is not None and state.get("answer") != "":
             return {}
-        print("[KB] Buscando informacoes na base de conhecimento...")
+        status("KB", "Consultando base de conhecimento...",
+               tag_color="\033[95m")
         ticket_info = state["ticket_info"]
         kb_content = get_knowledge_base_context(
             ctx.vector_store,
@@ -65,7 +64,7 @@ def build_solutions_worker_graph(ctx: AppContext):
             ticket_info["category"],
             ticket_info["description"],
         )
-        if kb_content == "NÃO_ENCONTRADO":
+        if kb_content == "N\xc3O_ENCONTRADO":
             kb_context = (
                 "**Observacao da Base de Conhecimento:** "
                 "Nenhuma informacao especifica foi encontrada na base de conhecimento "
@@ -76,10 +75,12 @@ def build_solutions_worker_graph(ctx: AppContext):
         return {"kb_context": kb_context}
 
     def generate_solutions(state: SolutionsWorkerState) -> dict:
-        if state.get("answer"):
+        if state.get("answer") is not None and state.get("answer") != "":
             return {}
+
         ticket_info = state["ticket_info"]
-        print(f"[Solucoes] Gerando solucoes para o chamado {ticket_info['ticket_id']}...\n")
+        status("Sol", f"Gerando solucoes para o chamado #{ticket_info['ticket_id']}...",
+               tag_color="\033[92m")
 
         chain = create_solutions_chain(ctx.llm_creative)
         solutions = chain.invoke({
@@ -97,8 +98,8 @@ def build_solutions_worker_graph(ctx: AppContext):
             "memory_context": state.get("memory_context", ""),
         })
 
-        print(f"[Solucoes] Solucoes Sugeridas:\n{solutions}")
-        print("-" * 80)
+        result_box(solutions, title="Solucoes Sugeridas", color="\033[95m")
+
         return {"answer": solutions}
 
     graph = StateGraph(SolutionsWorkerState)

@@ -2,7 +2,7 @@
 SQL Worker Agent: gera SQL, executa, e auto-corrige em caso de erro.
 
 Graph:
-  generate_sql → execute_sql → route → fix_sql (loop) | format_answer → END
+  generate_sql -> execute_sql -> route -> fix_sql (loop) | format_answer -> END
 """
 
 from typing import Literal, TypedDict
@@ -13,6 +13,7 @@ from langgraph.graph import END, StateGraph
 
 from ..chains import create_final_chain, create_sql_chain, run_query
 from ..config import AppContext
+from ..console import fail, result_box, status
 from ..prompts import FIX_SQL_TEMPLATE, get_system_instructions
 
 MAX_ATTEMPTS = 3
@@ -29,10 +30,10 @@ class SQLWorkerState(TypedDict):
 
 
 def build_sql_worker_graph(ctx: AppContext):
-    """Constrói o grafo do SQL worker com auto-correção."""
+    """Constroi o grafo do SQL worker com auto-correcao."""
 
     def generate_sql(state: SQLWorkerState) -> dict:
-        print("[SQL] Gerando SQL...")
+        status("SQL", "Gerando consulta...")
         chain = create_sql_chain(ctx.llm_sql)
         sql = chain.invoke({
             "question": state["question"],
@@ -42,7 +43,7 @@ def build_sql_worker_graph(ctx: AppContext):
         return {"sql": sql, "attempts": state.get("attempts", 0) + 1}
 
     def execute_sql(state: SQLWorkerState) -> dict:
-        print("[SQL] Executando SQL...")
+        status("SQL", "Executando no banco...")
         try:
             result = run_query(ctx.db, state["sql"])
             return {"result": result, "error": ""}
@@ -55,7 +56,9 @@ def build_sql_worker_graph(ctx: AppContext):
         return "format_answer"
 
     def fix_sql(state: SQLWorkerState) -> dict:
-        print(f"[SQL] Corrigindo SQL (tentativa {state['attempts'] + 1}/{MAX_ATTEMPTS})...")
+        a = state["attempts"] + 1
+        status("SQL", f"Corrigindo consulta (tentativa {a}/{MAX_ATTEMPTS})...",
+               tag_color="\033[93m")
         prompt = ChatPromptTemplate.from_messages([
             ("system", FIX_SQL_TEMPLATE),
             ("human", "{question}"),
@@ -73,21 +76,21 @@ def build_sql_worker_graph(ctx: AppContext):
 
     def format_answer(state: SQLWorkerState) -> dict:
         if state.get("error"):
-            msg = (
-                f"[ERRO] Nao foi possivel executar a consulta apos "
-                f"{state['attempts']} tentativas.\nErro: {state['error']}"
+            fail(
+                f"Nao foi possivel executar a consulta apos "
+                f"{state['attempts']} tentativas.\n"
+                f"Erro: {state['error']}"
             )
-            print(msg)
-            print("-" * 80)
-            return {"answer": msg}
+            return {"answer": state["error"]}
 
         chain = create_final_chain(ctx.llm_sql)
         answer = chain.invoke({
             "question": state["question"],
             "response": state["result"],
         })
-        print(f"Assistente:\n{answer}")
-        print("-" * 80)
+
+        result_box(answer, title="Resultado")
+
         return {"answer": answer}
 
     graph = StateGraph(SQLWorkerState)
