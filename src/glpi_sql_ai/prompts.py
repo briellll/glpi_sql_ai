@@ -39,9 +39,6 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
   Para verificar isso, APLIQUE TODAS AS CONDIÇÕES a seguir na cláusula WHERE:
   `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 2`
 
-- **"Chamados Abertos":** Refere-se a qualquer chamado que não esteja 'Solucionado' (5) ou 'Fechado' (6).
-  Para filtrar, use: `WHERE status IN (1, 2, 3, 4)`
-
 - **"Chamados Abertos":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status IN (1, 2, 3, 4)`
 - **"Chamados Novos":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 1`
 - **"Chamados Pendentes":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 3`
@@ -136,6 +133,22 @@ Se a secao contiver artigos da base de conhecimento:
 Mantenha a resposta estruturada, clara e fiel ao conteudo da base de conhecimento."""
 
 
+def get_scope_guard_instructions() -> str:
+    """Prompt para verificar se a pergunta esta dentro do escopo GLPI/helpdesk."""
+    return """Voce e um guardiao de escopo. Sua tarefa e determinar se a pergunta do usuario
+pertence ao dominio de helpdesk, suporte de TI e sistema GLPI.
+
+Responda APENAS com uma das duas palavras abaixo, sem explicacao adicional:
+
+- "within_scope": se a pergunta trata de chamados (tickets), tecnicos, setores, categorias de
+  incidentes, base de conhecimento, GLPI, suporte tecnico, service desk, ou qualquer tema
+  relacionado a gestao de servicos de TI.
+
+- "out_of_scope": se a pergunta e sobre qualquer outro assunto nao relacionado a helpdesk
+  (ex: saude, esportes, culinaria, curiosidades gerais, matematica, entretenimento,
+  perguntas pessoais, etc.)."""
+
+
 FIX_SQL_TEMPLATE = """
 Você gerou a query SQL abaixo para responder a pergunta do usuário:
 
@@ -225,6 +238,13 @@ solutions_prompt = ChatPromptTemplate.from_messages(
 intent_classifier_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", "{intent_instructions}\n\n{memory_context}"),
+        ("human", "{question}"),
+    ]
+)
+
+scope_guard_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "{scope_instructions}\n\n{memory_context}"),
         ("human", "{question}"),
     ]
 )

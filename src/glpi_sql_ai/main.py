@@ -10,7 +10,6 @@ from .agents.supervisor import build_supervisor_graph
 from .config import AppContext
 from .console import (
     banner,
-    divider,
     fail,
     prompt_str,
     status,
@@ -77,7 +76,10 @@ def main() -> None:
     ctx = AppContext()
     ctx.initialize()
     memory = ConversationMemory()
-    run_chat_application(ctx, memory)
+    try:
+        run_chat_application(ctx, memory)
+    finally:
+        ctx.shutdown()
 
 
 if __name__ == "__main__":

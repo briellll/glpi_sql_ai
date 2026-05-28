@@ -34,6 +34,12 @@ def create_intent_classifier_chain(llm):
     return intent_classifier_prompt | llm | StrOutputParser()
 
 
+def create_scope_guard_chain(llm):
+    from .prompts import scope_guard_prompt
+
+    return scope_guard_prompt | llm | StrOutputParser()
+
+
 def run_query(db, query: str) -> str:
     """Executa a query no banco após limpeza final."""
     cleaned = query.strip().replace("```sql", "").replace("```", "").strip()

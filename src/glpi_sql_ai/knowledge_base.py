@@ -75,10 +75,15 @@ class GLPIKnowledgeBase:
         if not self.all_articles or not query:
             return []
 
-        ignore_words = {"sem", "com", "para", "de", "do", "da", "me",
-                        "ajuda", "erro", "ao", "na", "no"}
+        ignore_words = {
+            "sem", "com", "para", "de", "do", "da", "me",
+            "ajuda", "erro", "ao", "na", "no",
+            "que", "uma", "isso", "nao", "por", "mas",
+            "ou", "se", "como", "ele", "ela", "dos", "das",
+            "um", "em", "os", "as", "foi", "ser",
+        }
         tokens = [
-            w.lower()
+            re.sub(r"[^\w\s]", "", w).lower()
             for w in query.split()
             if len(w) > 2 and w.lower() not in ignore_words
         ]

@@ -30,6 +30,9 @@ Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o b
   * **Classificacao Automatica de Intencao**
     O modelo entende se voce quer **consultar dados** ou **gerar solucoes para um chamado especifico**.
 
+  * **Validacao de Escopo (Guardrail)**
+    Um no `guard_scope` no grafo supervisor bloqueia perguntas fora do dominio helpdesk/GLPI (ex: saude, esportes, curiosidades), impedindo que cheguem aos workers.
+
   * **Integracao com a Base de Conhecimento GLPI**
     Enriquece as sugestoes de solucao com artigos diretamente da sua `Knowbase` do GLPI, indexados via **busca semantica vetorial** (ChromaDB + OpenAI Embeddings).
 
@@ -55,6 +58,9 @@ O sistema utiliza **LangGraph** para orquestrar um grafo supervisor com dois wor
 [Usuario faz pergunta]
         |
 [Supervisor: classificacao de intencao]
+        |
+[Supervisor: validacao de escopo]
+        |
        / \
       /   \
 [SQL Worker]    [Solutions Worker]
@@ -70,10 +76,16 @@ O sistema utiliza **LangGraph** para orquestrar um grafo supervisor com dois wor
             |
     [Resposta no terminal]
 ```
+```
+[Fora do escopo]
+        |
+[Resposta educada de recusa — sem acionar workers]
+```
 
 | Agente | Funcao |
 | ------ | ------ |
-| Supervisora | Classifica a intencao (`database_query` ou `get_solutions`) e roteia para o worker |
+| Supervisora | Classifica intencao (`database_query` ou `get_solutions`), valida escopo e roteia para o worker |
+| Guardiao de Escopoa | Bloqueia perguntas fora do dominio helpdesk/GLPI com recusa educada |
 | SQL Workera | Gera SQL, executa no MySQL, auto-corrige erros, formata resposta natural |
 | Solutions Workera | Extrai ID do chamado, busca na base vetorial (ChromaDB), gera solucoes baseadas nos artigos |
 
@@ -254,6 +266,8 @@ Ate a proxima!
 [Usuario faz pergunta]
         |
 [Supervisor: classificacao de intencao]
+        |
+[Supervisor: validacao de escopo]
        / \
       /   \
 [SQL Worker]                [Solutions Worker]
@@ -275,9 +289,11 @@ Ate a proxima!
 
 O fluxo original usava chains isoladas. A versao atual usa **LangGraph** com grafo supervisor e workers com estado proprio:
 
+  * **validacao de escopo**: o no `guard_scope` no grafo supervisor intercepta perguntas alheias ao dominio helpdesk/GLPI antes que cheguem aos workers, exibindo uma recusa educada
   * **auto-correcao de SQL**: loop interno no `sql_worker` que detecta erro, envia para o LLM corrigir e re-executa (ate 3 tentativas)
   * **busca vetorial**: substituiu o keyword scoring por embeddings OpenAI + ChromaDB, com resultados muito mais precisos
   * **fidelidade ao artigo**: o prompt de solucoes foi reformulado para reproduzir fielmente o conteudo dos artigos, sem inventar informacoes
+  * **tratamento robusto de erros**: tickets inexistentes ou sem ID retornam mensagens de erro claras, sem quebrar o fluxo
 
 -----
 

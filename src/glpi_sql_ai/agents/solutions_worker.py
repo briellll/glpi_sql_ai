@@ -37,7 +37,13 @@ def build_solutions_worker_graph(ctx: AppContext):
                 "Inclua o ID na sua pergunta "
                 "(ex: 'solucoes para o chamado 2233')."
             )
-            return {"answer": ""}
+            return {
+                "answer": (
+                    "Nao foi possivel identificar o ID do chamado. "
+                    "Inclua o numero do chamado na sua pergunta "
+                    "(ex: 'solucoes para o chamado 2233')."
+                ),
+            }
         status("Busca", f"Localizando chamado #{ticket_id}...",
                tag_color="\033[38;5;214m")
         return {"ticket_id": ticket_id}
@@ -49,7 +55,13 @@ def build_solutions_worker_graph(ctx: AppContext):
         ticket_info = parse_ticket_details(details_str)
         if not ticket_info:
             fail(f"Chamado com ID {state['ticket_id']} nao encontrado.")
-            return {"answer": ""}
+            return {
+                "answer": (
+                    f"Chamado #{state['ticket_id']} nao encontrado no banco de dados. "
+                    "Verifique se o ID esta correto e se o chamado pertence a entidade de TI "
+                    "e nao foi excluido."
+                ),
+            }
         return {"ticket_info": ticket_info}
 
     def search_kb(state: SolutionsWorkerState) -> dict:

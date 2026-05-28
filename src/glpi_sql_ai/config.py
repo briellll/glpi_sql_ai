@@ -222,6 +222,15 @@ class AppContext:
                     "   O sistema funcionara apenas com seu conhecimento proprio."
                 )
 
+    def shutdown(self):
+        """Encerra recursos externos (sessao GLPI, conexoes)."""
+        if self._kb:
+            try:
+                self._kb.close_session()
+                logger.info("[KB] Sessao GLPI encerrada.")
+            except Exception:
+                pass
+
     @property
     def db(self) -> SQLDatabase:
         if not self._db:
