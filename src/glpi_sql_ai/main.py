@@ -10,6 +10,7 @@ from .agents.supervisor import build_supervisor_graph
 from .config import AppContext
 from .console import (
     banner,
+    divider,
     fail,
     prompt_str,
     status,
@@ -34,7 +35,11 @@ def run_chat_application(ctx: AppContext, memory: ConversationMemory) -> None:
     """
     supervisor = build_supervisor_graph(ctx)
 
-    banner("GLPI SQL AI", "Pergunte sobre chamados ou peca solucoes tecnicas")
+    model_tag = ctx.llm_sql.model_name
+    banner("GLPI SQL AI", f"Pergunte sobre chamados ou peca solucoes tecnicas")
+
+    status("LLM", model_tag, tag_color="\033[38;5;214m")
+    divider()
 
     while True:
         try:
@@ -73,8 +78,10 @@ def run_chat_application(ctx: AppContext, memory: ConversationMemory) -> None:
 
 def main() -> None:
     """Ponto de entrada: inicializa contexto e inicia o chat."""
+    print("  Inicializando...", flush=True)
     ctx = AppContext()
     ctx.initialize()
+    print("  Pronto.\n")
     memory = ConversationMemory()
     try:
         run_chat_application(ctx, memory)

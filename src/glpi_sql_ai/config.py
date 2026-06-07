@@ -140,14 +140,24 @@ class AppContext:
         )
         logger.info("[DB] Banco de dados conectado com sucesso.")
 
-    def _init_llm(self, api_key: str):
-        logger.info("[LLM] Inicializando o modelo de linguagem...")
-        self._llm_sql = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=0, api_key=api_key
-        )
-        self._llm_creative = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=0.3, api_key=api_key
-        )
+    def _init_llm(self, openai_api_key: str):
+        deepseek_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        if deepseek_key and len(deepseek_key) > 10:
+            logger.info("[LLM] Inicializando DeepSeek V4 Flash...")
+            llm_kwargs = {
+                "model": "deepseek-v4-flash",
+                "openai_api_key": deepseek_key,
+                "openai_api_base": "https://api.deepseek.com",
+            }
+        else:
+            logger.info("[LLM] DeepSeek nao configurado. Usando GPT-3.5-turbo...")
+            llm_kwargs = {
+                "model": "gpt-3.5-turbo",
+                "api_key": openai_api_key,
+            }
+
+        self._llm_sql = ChatOpenAI(temperature=0, **llm_kwargs)
+        self._llm_creative = ChatOpenAI(temperature=0.3, **llm_kwargs)
         logger.info("[LLM] Modelo de linguagem inicializado.")
 
     def _init_vector_store(self, api_key: str):

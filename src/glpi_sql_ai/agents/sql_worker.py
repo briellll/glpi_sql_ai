@@ -13,7 +13,7 @@ from langgraph.graph import END, StateGraph
 
 from ..chains import create_final_chain, create_sql_chain, run_query
 from ..config import AppContext
-from ..console import fail, result_box, status
+from ..console import display, fail, status
 from ..prompts import FIX_SQL_TEMPLATE, get_system_instructions
 
 MAX_ATTEMPTS = 3
@@ -89,7 +89,7 @@ def build_sql_worker_graph(ctx: AppContext):
             "response": state["result"],
         })
 
-        result_box(answer, title="Resultado")
+        display(answer, title="Resultado", color="\033[96m")
 
         return {"answer": answer}
 

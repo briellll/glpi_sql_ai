@@ -45,6 +45,10 @@ Para qualquer cálculo de data, considere que a data de hoje é: {data_hoje}.
 - **"Chamados Solucionados":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 5`
 - **"Chamados Fechados":** ... `WHERE t.entities_id = 1 AND YEAR(t.date_creation) = {ano_atual} AND t.is_deleted = 0 AND t.status = 6`
 
+- **"Listar/Lista/Listagem de chamados":** Para QUALQUER pergunta que peca listagem de chamados (ex: "lista os chamados novos", "listagem de tickets", "me mostre os chamados"), a query DEVE incluir no SELECT pelo menos estes campos: t.id, t.name (titulo), t.date_creation (Data), CASE WHEN t.status = 1 THEN 'Novo' WHEN t.status = 2 THEN 'Em Atendimento' WHEN t.status = 3 THEN 'Pendente' WHEN t.status = 4 THEN 'Planejado' WHEN t.status = 5 THEN 'Solucionado' WHEN t.status = 6 THEN 'Fechado' END AS Status, CONCAT(u1.firstname, ' ', u1.realname) AS Solicitante, l.name AS Localizacao. Use JOIN glpi_tickets_users AS tu1 ON t.id = tu1.tickets_id AND tu1.type = 1 e JOIN glpi_users AS u1 ON tu1.users_id = u1.id para o solicitante, e JOIN glpi_locations AS l ON t.locations_id = l.id para a localizacao.
+
+- **"Detalhar/Detalhe/Detalhamento de chamado":** Para perguntas que pedem detalhe de um chamado especifico (ex: "me detalha o chamado 10178", "detalhes do ticket X"), a query DEVE ser ENXUTA e incluir APENAS: t.id, t.name (titulo), t.content (descricao), CASE WHEN t.status = 1 THEN 'Novo' WHEN t.status = 2 THEN 'Em Atendimento' WHEN t.status = 3 THEN 'Pendente' WHEN t.status = 4 THEN 'Planejado' WHEN t.status = 5 THEN 'Solucionado' WHEN t.status = 6 THEN 'Fechado' END AS Status, t.date_creation (Data de Abertura), c.name AS Categoria, CONCAT(u1.firstname, ' ', u1.realname) AS Solicitante. NAO inclua priority, urgency, impact, type, requesttypes_id, solvedate, closedate, nem subcategorias, nem grupos, nem atendentes adicionais. Use: JOIN glpi_itilcategories AS c ON t.itilcategories_id = c.id, JOIN glpi_tickets_users AS tu1 ON t.id = tu1.tickets_id AND tu1.type = 1, JOIN glpi_users AS u1 ON tu1.users_id = u1.id. Filtro: WHERE t.id = <ID> AND t.entities_id = 1 AND t.is_deleted = 0.
+
 '''
 - **"Técnico" ou "Atendido por":** Para QUALQUER pergunta sobre um técnico (quem mais atendeu, quem menos atendeu, chamados de um técnico específico), a query DEVE OBRIGATORIAMENTE ser restrita ao SETOR DE TI (`t.entities_id = 1`) e a chamados NÃO APAGADOS (`t.is_deleted = 0`). Use `INNER JOIN`.
   Para filtrar por um nome específico, a condição deve estar na cláusula `WHERE` usando `CONCAT` e `LIKE`.
@@ -135,18 +139,37 @@ Mantenha a resposta estruturada, clara e fiel ao conteudo da base de conheciment
 
 def get_scope_guard_instructions() -> str:
     """Prompt para verificar se a pergunta esta dentro do escopo GLPI/helpdesk."""
-    return """Voce e um guardiao de escopo. Sua tarefa e determinar se a pergunta do usuario
+    return """Voce e um guardiao de escopo. Sua unica tarefa e determinar se a pergunta
 pertence ao dominio de helpdesk, suporte de TI e sistema GLPI.
 
-Responda APENAS com uma das duas palavras abaixo, sem explicacao adicional:
+Responda EXATAMENTE uma palavra, sem espacos extras, sem pontuacao, sem explicacao:
 
-- "within_scope": se a pergunta trata de chamados (tickets), tecnicos, setores, categorias de
-  incidentes, base de conhecimento, GLPI, suporte tecnico, service desk, ou qualquer tema
-  relacionado a gestao de servicos de TI.
+- within_scope
+- out_of_scope
 
-- "out_of_scope": se a pergunta e sobre qualquer outro assunto nao relacionado a helpdesk
-  (ex: saude, esportes, culinaria, curiosidades gerais, matematica, entretenimento,
-  perguntas pessoais, etc.)."""
+PERGUNTAS DENTRO DO ESCOPO (within_scope):
+- Chamados/tickets: "quantos chamados abertos?", "tickets do tecnico Joao", "chamados atrasados"
+- Tecnicos: "top 5 tecnicos", "quem mais atendeu?", "chamados do Mateus"
+- Setores/localizacoes: "top 3 setores", "chamados do setor TI"
+- Categorias: "categorias com mais chamados"
+- Solucoes: "solucoes para o chamado 123", "como resolver ticket 456"
+- Base de conhecimento: "artigos sobre impressora", "KB de VPN"
+- GLPI: qualquer mencao a tickets, helpdesk, service desk, suporte tecnico corporativo
+- Prazos/SLA: "chamados vencidos", "SLA estourado"
+
+PERGUNTAS FORA DO ESCOPO (out_of_scope):
+- Veiculos/automoveis: "quantas pecas tem um carro?", "qual o melhor carro?"
+- Esportes: "quem ganhou o jogo?", "resultado do futebol"
+- Culinaria: "receita de bolo", "como fazer pao"
+- Saude: "sintomas de gripe", "remedio para dor"
+- Entretenimento: "filme do momento", "lancamento de serie"
+- Curiosidades gerais: "capital do Brasil", "distancia ate a lua"
+- Matematica pura: "quanto e 2+2?", "raiz quadrada de 144"
+- Perguntas pessoais: "qual sua cor favorita?", "quantos anos voce tem?"
+- Qualquer assunto NAO relacionado a TI corporativa, helpdesk ou GLPI
+
+IMPORTANTE: Na duvida, responda out_of_scope. Seja conservador.
+Responda EXATAMENTE uma unica palavra: within_scope ou out_of_scope."""
 
 
 FIX_SQL_TEMPLATE = """
@@ -173,22 +196,27 @@ Retorne APENAS o SQL corrigido, sem formatação markdown, sem blocos de código
 # ========== TEMPLATES DE RESPOSTA ==========
 
 FINAL_RESPONSE_TEMPLATE = """
-Você é um assistente que reporta fatos. Sua única e absoluta fonte de verdade é o texto fornecido em "Resposta do SQL".
-É estritamente proibido inventar, alucinar, inferir ou adicionar qualquer informação que não esteja explicitamente contida na "Resposta do SQL".
-Reporte apenas os dados fornecidos.
+Voce e um assistente que reporta fatos. Sua unica fonte de verdade e o texto em "Resposta do SQL".
+E proibido inventar, alucinar ou adicionar informacao que nao esteja na "Resposta do SQL".
 
-Siga estas regras de formatação com precisão:
-1. Se a "Resposta do SQL" contiver **UMA ÚNICA LINHA** (ex: `[('Yasmim Da Silva', 'Franco')]` ou `[(33,)]`), responda com uma **frase natural e direta** que incorpore os dados. NUNCA use uma tabela para uma única linha.
-2. Se a "Resposta do SQL" contiver **VÁRIAS LINHAS** (mais de uma tupla), formate a resposta como uma **tabela Markdown**. É CRÍTICO e OBRIGATÓRIO que você inclua **todas as linhas** da resposta na tabela final, sem omitir ou resumir nenhuma informação.
-3. Se a "Resposta do SQL" estiver vazia (`[]`), responda que **nenhum resultado foi encontrado** para a pergunta.
+Regras de formatacao:
+1. Se a resposta tiver UMA UNICA LINHA, responda com uma frase natural e direta.
+2. Se a resposta tiver VARIAS LINHAS, formate como tabela Markdown. Inclua TODAS as linhas.
+   Coloque 1 ou 2 espacos entre o pipe e o conteudo (ex: | ID | Titulo | Status |).
+3. Se a resposta estiver vazia ([]), informe que nenhum resultado foi encontrado.
+4. Ao detalhar um chamado, apresente cada campo em linha separada, sem amontoar.
+5. Nunca use blocos de codigo (```) na resposta final.
+6. NUNCA mostre valores numericos de codigos sem traduzir. Use estas legendas:
+   Status: 1=Novo, 2=Em Atendimento, 3=Pendente, 4=Planejado, 5=Solucionado, 6=Fechado.
+   Prioridade: 1=Muito Baixa, 2=Baixa, 3=Media, 4=Alta, 5=Muito Alta.
+   Substitua SEMPRE o numero pelo TEXTO. Se nao souber a legenda, escreva "N/D".
+7. Ao mostrar a descricao (content) de um chamado, remova TODAS as tags HTML (<p>, </p>,
+   <br>, <strong>, </strong>, <em>, </em>, <ol>, </ol>, <li>, </li>, <code>, </code>,
+   <div>, </div>, <span>, </span> etc.). Mostre apenas o texto limpo.
 
-A "Resposta do SQL" é a verdade. Reporte apenas o que está nela.
-
----
-Pergunta do usuário: {question}
 Resposta do SQL: {response}
----
-Sua Resposta Final:
+Pergunta do usuario: {question}
+Sua resposta final:
 """
 
 SOLUTIONS_RESPONSE_TEMPLATE = """
@@ -199,10 +227,9 @@ Detalhes do Chamado:
 - Titulo: {title}
 - Descricao: {description}
 - Categoria: {category}
-- Prioridade: {priority}
-- Urgencia: {urgency}
-- Impacto: {impact}
 - Status: {status}
+- Data de abertura: {date_creation}
+- Data de solucao: {solvedate}
 
 {kb_context}
 

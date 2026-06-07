@@ -9,12 +9,12 @@ from typing import TypedDict
 
 from langgraph.graph import END, StateGraph
 
-from ..chains import create_solutions_chain, get_ticket_details
+from ..chains import create_solutions_chain, fetch_ticket_raw
 from ..config import AppContext
-from ..console import fail, result_box, status
+from ..console import display, fail, status
 from ..knowledge_base import get_knowledge_base_context
 from ..prompts import get_solutions_instructions
-from ..services import extract_ticket_id, parse_ticket_details
+from ..services import extract_ticket_id
 
 
 class SolutionsWorkerState(TypedDict):
@@ -31,6 +31,8 @@ def build_solutions_worker_graph(ctx: AppContext):
 
     def extract_ticket(state: SolutionsWorkerState) -> dict:
         ticket_id = extract_ticket_id(state["question"])
+        if not ticket_id:
+            ticket_id = extract_ticket_id(state.get("memory_context", ""))
         if not ticket_id:
             fail(
                 "Nao consegui identificar o ID do chamado. "
@@ -49,11 +51,12 @@ def build_solutions_worker_graph(ctx: AppContext):
         return {"ticket_id": ticket_id}
 
     def get_details(state: SolutionsWorkerState) -> dict:
+        from html import unescape
+
         if state.get("answer") is not None and state.get("answer") != "":
             return {}
-        details_str = get_ticket_details(ctx.db, state["ticket_id"])
-        ticket_info = parse_ticket_details(details_str)
-        if not ticket_info:
+        row = fetch_ticket_raw(ctx.db, state["ticket_id"])
+        if not row:
             fail(f"Chamado com ID {state['ticket_id']} nao encontrado.")
             return {
                 "answer": (
@@ -62,6 +65,15 @@ def build_solutions_worker_graph(ctx: AppContext):
                     "e nao foi excluido."
                 ),
             }
+        ticket_info = {
+            "ticket_id": row[0],
+            "title": unescape(row[1] or "Sem titulo"),
+            "description": unescape(row[2] or "Sem descricao"),
+            "category": unescape(row[3] or "Nao categorizado"),
+            "status": row[4] or "Desconhecido",
+            "date_creation": str(row[5] or ""),
+            "solvedate": str(row[6] or ""),
+        }
         return {"ticket_info": ticket_info}
 
     def search_kb(state: SolutionsWorkerState) -> dict:
@@ -100,17 +112,16 @@ def build_solutions_worker_graph(ctx: AppContext):
             "title": ticket_info["title"],
             "description": ticket_info["description"],
             "category": ticket_info["category"],
-            "priority": ticket_info["priority"],
-            "urgency": ticket_info["urgency"],
-            "impact": ticket_info["impact"],
             "status": ticket_info["status"],
+            "date_creation": ticket_info.get("date_creation", ""),
+            "solvedate": ticket_info.get("solvedate", ""),
             "question": state["question"],
             "kb_context": state["kb_context"],
             "solutions_instructions": get_solutions_instructions(),
             "memory_context": state.get("memory_context", ""),
         })
 
-        result_box(solutions, title="Solucoes Sugeridas", color="\033[95m")
+        display(solutions, title="Solucoes Sugeridas", color="\033[95m")
 
         return {"answer": solutions}
 

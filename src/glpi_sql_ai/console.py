@@ -59,7 +59,7 @@ C_DM = "\033[90m"   # grey
 # ==========================================================================
 
 def _term_width() -> int:
-    return shutil.get_terminal_size().columns - 2
+    return shutil.get_terminal_size().columns
 
 
 def banner(title: str, subtitle: str = "", width: int | None = None) -> None:
@@ -101,25 +101,15 @@ def status(tag: str, msg: str, tag_color: str = C_CYAN, width: int | None = None
     print(f"{D}{tag_color}{padded}{R} {msg}")
 
 
-def result_box(lines: str, title: str = "", color: str = C_CYAN, width: int | None = None) -> None:
-    """Exibe resultado dentro de uma caixa com bordas leves."""
-    if width is None:
-        width = min(_term_width(), 80)
-    inner = width - 4  # espaco interno
-
-    hr = f"{D}{color}{'─' * width}{R}"
-    top_hr = f"{D}{color}┌─ {B}{title} {'─' * (inner - len(title) - 1)}┐{R}" if title else f"{D}{color}┌{'─' * (width - 2)}┐{R}"
-    bot_hr = f"{D}{color}└{'─' * (width - 2)}┘{R}"
-    edge = f"{D}{color}│{R}"
-
+def display(text: str, title: str = "", color: str = "") -> None:
+    """Exibe texto com titulo colorido opcional, sem bordas."""
     print()
-    print(top_hr)
-    for line_text in lines.strip().split("\n"):
-        if line_text == "":
-            print(f"{edge}")
-        else:
-            print(f"{edge} {line_text}")
-    print(bot_hr)
+    if title:
+        print(f"  {B}{color}{title}{R}")
+        divider()
+    for line in text.strip().split("\n"):
+        print(f"  {line}")
+    print()
 
 
 def ok(text: str = "") -> None:

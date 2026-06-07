@@ -4,6 +4,7 @@ Sem side effects em tempo de importação.
 """
 
 import logging
+from html import unescape
 
 from langchain_core.output_parsers import StrOutputParser
 
@@ -41,9 +42,10 @@ def create_scope_guard_chain(llm):
 
 
 def run_query(db, query: str) -> str:
-    """Executa a query no banco após limpeza final."""
+    """Executa a query no banco após limpeza final e decodificação HTML."""
     cleaned = query.strip().replace("```sql", "").replace("```", "").strip()
-    return db.run(cleaned)
+    result = db.run(cleaned)
+    return unescape(result)
 
 
 def get_ticket_details(db, ticket_id: str) -> str:
@@ -54,12 +56,33 @@ def get_ticket_details(db, ticket_id: str) -> str:
         t.name,
         t.content,
         c.name AS category,
-        t.priority,
-        t.urgency,
-        t.impact,
-        t.status
+        t.status,
+        t.date_creation,
+        t.solvedate
     FROM glpi_tickets AS t
     LEFT JOIN glpi_itilcategories AS c ON t.itilcategories_id = c.id
     WHERE t.id = :ticket_id AND t.entities_id = 1 AND t.is_deleted = 0
     """
     return db.run(query, parameters={"ticket_id": ticket_id})
+
+
+def fetch_ticket_raw(db, ticket_id: str) -> tuple | None:
+    """Busca detalhes de um chamado diretamente via engine, retornando tupla nativa."""
+    from sqlalchemy import text as sa_text
+
+    query = sa_text("""
+        SELECT
+            t.id,
+            t.name,
+            t.content,
+            c.name AS category,
+            t.status,
+            t.date_creation,
+            t.solvedate
+        FROM glpi_tickets AS t
+        LEFT JOIN glpi_itilcategories AS c ON t.itilcategories_id = c.id
+        WHERE t.id = :tid AND t.entities_id = 1 AND t.is_deleted = 0
+    """)
+    with db._engine.connect() as conn:
+        row = conn.execute(query, {"tid": ticket_id}).fetchone()
+    return tuple(row) if row else None

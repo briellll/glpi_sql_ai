@@ -46,6 +46,7 @@ def extract_ticket_id(question: str) -> str | None:
 def parse_ticket_details(details_str: str) -> dict | None:
     """
     Faz o parsing dos detalhes do chamado retornados do banco.
+    Aplica unescape em cada campo de texto para limpar entidades HTML.
 
     Args:
         details_str: String retornada do banco com formato de lista de tuplas
@@ -53,6 +54,8 @@ def parse_ticket_details(details_str: str) -> dict | None:
     Returns:
         Dicionário com detalhes do chamado ou None se houver erro
     """
+    from html import unescape as _unescape
+
     try:
         data = ast.literal_eval(details_str)
         if not data or not data[0]:
@@ -61,13 +64,12 @@ def parse_ticket_details(details_str: str) -> dict | None:
         row = data[0]
         return {
             "ticket_id": row[0],
-            "title": row[1] or "Sem título",
-            "description": row[2] or "Sem descrição",
-            "category": row[3] or "Não categorizado",
-            "priority": row[4] or "N/A",
-            "urgency": row[5] or "N/A",
-            "impact": row[6] or "N/A",
-            "status": row[7] or "Desconhecido",
+            "title": _unescape(row[1] or "Sem título"),
+            "description": _unescape(row[2] or "Sem descrição"),
+            "category": _unescape(row[3] or "Não categorizado"),
+            "status": row[4] or "Desconhecido",
+            "date_creation": str(row[5] or ""),
+            "solvedate": str(row[6] or ""),
         }
     except Exception as e:
         logger.error("Erro ao fazer parsing dos detalhes: %s", e)
@@ -159,10 +161,9 @@ def process_solutions_request(
         "title": ticket_info["title"],
         "description": ticket_info["description"],
         "category": ticket_info["category"],
-        "priority": ticket_info["priority"],
-        "urgency": ticket_info["urgency"],
-        "impact": ticket_info["impact"],
         "status": ticket_info["status"],
+        "date_creation": ticket_info.get("date_creation", ""),
+        "solvedate": ticket_info.get("solvedate", ""),
         "question": question,
         "kb_context": kb_context,
         "solutions_instructions": get_solutions_instructions(),
