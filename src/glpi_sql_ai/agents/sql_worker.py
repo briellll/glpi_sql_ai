@@ -81,7 +81,12 @@ def build_sql_worker_graph(ctx: AppContext):
                 f"{state['attempts']} tentativas.\n"
                 f"Erro: {state['error']}"
             )
-            return {"answer": state["error"]}
+            return {
+                "answer": (
+                    "Nao foi possivel executar a consulta SQL. "
+                    "Por favor, tente reformular sua pergunta."
+                )
+            }
 
         chain = create_final_chain(ctx.llm_sql)
         answer = chain.invoke({

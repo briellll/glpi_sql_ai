@@ -38,7 +38,9 @@ def extract_ticket_id(question: str) -> str | None:
         ID do chamado como string ou None se não encontrar
     """
     match = re.search(
-        r"(?:id\s*|chamado\s*|ticket\s*)?(\d+)", question, re.IGNORECASE
+        r"(?:id\s*|chamado\s*|ticket\s*)(?:#|n[°º]\s*)?(\d+)",
+        question,
+        re.IGNORECASE,
     )
     return match.group(1) if match else None
 

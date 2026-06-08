@@ -7,6 +7,7 @@ Todas as inicializações são explícitas — sem side effects em tempo de impo
 import json
 import logging
 import os
+import urllib.parse
 from pathlib import Path
 from typing import Optional
 
@@ -127,8 +128,26 @@ class AppContext:
         db_host = os.getenv("DB_HOST")
         db_name = os.getenv("DB_NAME")
 
+        # DB_PASSWORD pode ser vazio (ex.: root sem senha no XAMPP), por isso
+        # validamos apenas presenca (is None), nao conteudo vazio. As demais
+        # variaveis nao podem ser vazias.
+        missing = [v for v in ["DB_USER", "DB_HOST", "DB_NAME"]
+                   if not os.getenv(v)]
+        if os.getenv("DB_PASSWORD") is None:
+            missing.append("DB_PASSWORD")
+        if missing:
+            raise ValueError(
+                f"Variaveis de ambiente obrigatorias nao configuradas no .env: "
+                f"{', '.join(missing)}"
+            )
+
         logger.info("[DB] Conectando ao banco de dados...")
-        db_uri = f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}/{db_name}"
+        db_uri = (
+            f"mysql+mysqlconnector://"
+            f"{urllib.parse.quote_plus(str(db_user))}:"
+            f"{urllib.parse.quote_plus(str(db_password))}@"
+            f"{db_host}/{db_name}"
+        )
         self._db = SQLDatabase.from_uri(
             db_uri,
             engine_args={

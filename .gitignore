@@ -33,3 +33,6 @@ htmlcov/
 
 # Logs
 *.log
+
+# ChromaDB (banco vetorial com indices binarios)
+chroma_db/

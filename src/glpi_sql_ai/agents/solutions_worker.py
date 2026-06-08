@@ -32,8 +32,6 @@ def build_solutions_worker_graph(ctx: AppContext):
     def extract_ticket(state: SolutionsWorkerState) -> dict:
         ticket_id = extract_ticket_id(state["question"])
         if not ticket_id:
-            ticket_id = extract_ticket_id(state.get("memory_context", ""))
-        if not ticket_id:
             fail(
                 "Nao consegui identificar o ID do chamado. "
                 "Inclua o ID na sua pergunta "
