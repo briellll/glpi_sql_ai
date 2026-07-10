@@ -128,7 +128,8 @@ glpi-sql-ai/
   * **Python 3.13+**
   * **Poetry** — gerenciamento de pacotes e ambientes virtuais
   * **LangChain + LangGraph** — orquestracao de prompts, chains e grafo multi-agente
-  * **OpenAI GPT-3.5-Turbo** — modelo de linguagem principal
+  * **DeepSeek V4 Flash** — modelo de linguagem principal (via API compativel com OpenAI)
+  * **OpenAI GPT-3.5-Turbo** — modelo alternativo (fallback, quando `DEEPSEEK_API_KEY` nao esta configurada)
   * **OpenAI text-embedding-3-small** — embeddings para busca semantica
   * **ChromaDB** — banco vetorial para busca semantica na base de conhecimento
   * **MySQL** — banco de dados do GLPI
@@ -145,7 +146,7 @@ glpi-sql-ai/
   * Poetry instalado
   * Acesso a um banco GLPI MySQL ativo
   * Acesso a API REST do GLPI (opcional, para sincronizacao da base de conhecimento)
-  * Chave de API da OpenAI
+  * Chave de API da OpenAI (embeddings) e, opcionalmente, do DeepSeek (LLM principal)
 
 -----
 
@@ -200,8 +201,11 @@ Para a integracao com a base de conhecimento, voce precisa de **dois tokens** no
 Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-# Chave da OpenAI
+# Chave da OpenAI (embeddings; e LLM de fallback se o DeepSeek nao for configurado)
 OPENAI_API_KEY="sk-..."
+
+# Chave do DeepSeek (LLM principal). Se ausente, usa GPT-3.5-turbo da OpenAI.
+DEEPSEEK_API_KEY="sk-..."
 
 # Credenciais do Banco de Dados
 DB_HOST="localhost"
@@ -299,21 +303,28 @@ O fluxo original usava chains isoladas. A versao atual usa **LangGraph** com gra
 
 ## Ambiente de Teste (Seed)
 
-O projeto inclui um script que popula o banco com dados de teste:
+O projeto inclui scripts que populam o banco com dados de teste **sinteticos**:
 
 ```bash
+# Ambiente completo (recomendado): limpa dados reais, anonimiza usuarios/setores
+# e gera 40 chamados + 10 artigos ficticios realistas
+poetry run python scripts/rebuild_synthetic_data.py
+
+# Ou o seed basico (7 chamados + 6 artigos), sem limpar a base existente
 poetry run python scripts/seed_test_data.py
 ```
 
-Isso cria:
-  * **7 chamados** com status variados (novo, em atendimento, pendente, solucionado, fechado), incluindo chamados atrasados
-  * **6 artigos** na base de conhecimento (`glpi_knowbaseitems`) sobre temas como: computador lento, reset de senha, impressora de rede, e-mail Outlook, VPN e certificado digital
-  * **Indexacao vetorial** automatica no ChromaDB
+O `rebuild_synthetic_data.py` cria:
+  * **40 chamados** com status variados (novo, em atendimento, pendente, solucionado, fechado), dos quais **16 atrasados**
+  * **10 artigos** na base de conhecimento (`glpi_knowbaseitems`) sobre temas de suporte de TI (computador lento, reset de senha, impressora, e-mail, VPN, certificado digital, backup, rede, software)
+  * **anonimizacao** de usuarios, setores e categorias — nenhum dado pessoal real permanece
 
-Com o seed ativo, voce pode testar perguntas como:
+> Apos o rebuild, reindexe a base vetorial (o `seed_test_data.py` faz a indexacao; ou rode a aplicacao, que sincroniza a KB na inicializacao).
+
+Com os dados de teste ativos, voce pode testar perguntas como:
   * `quantos chamados atrasados existem?`
   * `solucoes para o chamado 10367`
-  * `chamados do tecnico Yan Silva`
+  * `chamados do tecnico Ana Pereira`
 
 -----
 
@@ -324,7 +335,7 @@ Com o seed ativo, voce pode testar perguntas como:
 | Consultas | "Quantos chamados estao abertos?" |
 | Ranking | "Top 5 tecnicos com mais chamados solucionados" |
 | Atrasos | "Quantos chamados atrasados existem este mes?" |
-| Tecnicos | "Chamados do tecnico Yan Silva" |
+| Tecnicos | "Chamados do tecnico Ana Pereira" |
 | Solucoes | "Solucoes para o chamado 10367" |
 
 -----
