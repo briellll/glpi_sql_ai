@@ -41,11 +41,46 @@ def create_scope_guard_chain(llm):
     return scope_guard_prompt | llm | StrOutputParser()
 
 
+def _format_cell(value) -> str:
+    """Formata um valor de célula para apresentação limpa ao formatador."""
+    import datetime as _dt
+
+    if value is None:
+        return "N/D"
+    if isinstance(value, _dt.datetime):
+        return value.strftime("%Y-%m-%d %H:%M")
+    if isinstance(value, _dt.date):
+        return value.strftime("%Y-%m-%d")
+    return unescape(str(value))
+
+
 def run_query(db, query: str) -> str:
-    """Executa a query no banco após limpeza final e decodificação HTML."""
+    """Executa a query e retorna um resultado limpo, rotulado por coluna.
+
+    Diferentemente do dump cru de tuplas (que confundia o formatador final e
+    o levava a reportar "nenhum resultado" para conjuntos multi-linha), esta
+    versão devolve os nomes das colunas e os valores já formatados (datas
+    legíveis, HTML decodificado), tornando a formatação final determinística
+    e confiável.
+    """
     cleaned = query.strip().replace("```sql", "").replace("```", "").strip()
-    result = db.run(cleaned)
-    return unescape(result)
+
+    # exec_driver_sql: passa o SQL direto ao driver, sem interpretar ':' ou '%'
+    # como parâmetros (comum em literais de data/hora e cláusulas LIKE).
+    with db._engine.connect() as conn:
+        proxy = conn.exec_driver_sql(cleaned)
+        if proxy.returns_rows:
+            columns = list(proxy.keys())
+            rows = proxy.fetchall()
+        else:
+            columns, rows = [], []
+
+    if not rows:
+        return "[]"
+
+    header = " | ".join(columns)
+    body = "\n".join(" | ".join(_format_cell(v) for v in row) for row in rows)
+    return f"{len(rows)} linha(s) retornada(s).\nColunas: {header}\n{body}"
 
 
 def get_ticket_details(db, ticket_id: str) -> str:

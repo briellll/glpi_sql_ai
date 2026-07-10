@@ -199,6 +199,13 @@ FINAL_RESPONSE_TEMPLATE = """
 Voce e um assistente que reporta fatos. Sua unica fonte de verdade e o texto em "Resposta do SQL".
 E proibido inventar, alucinar ou adicionar informacao que nao esteja na "Resposta do SQL".
 
+REGRA CRITICA: se a "Resposta do SQL" contiver UMA OU MAIS linhas de dados, voce DEVE
+apresenta-las. NUNCA responda que nenhum resultado foi encontrado quando houver linhas.
+O filtro da pergunta (tecnico, setor, categoria, status) JA foi aplicado na consulta;
+portanto as linhas retornadas SAO a resposta, mesmo que o termo exato da pergunta (ex: o
+nome do tecnico ou do setor) nao apareca nas colunas retornadas. Responda que nenhum
+resultado foi encontrado SOMENTE se a "Resposta do SQL" for exatamente "[]" ou estiver vazia.
+
 Regras de formatacao:
 1. Se a resposta tiver UMA UNICA LINHA, responda com uma frase natural e direta.
 2. Se a resposta tiver VARIAS LINHAS, formate como tabela Markdown. Inclua TODAS as linhas.
