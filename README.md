@@ -99,10 +99,13 @@ glpi-sql-ai/
 ├── pyproject.toml             # Dependencias e metadata do Poetry
 ├── README.md
 ├── scripts/
-│   └── seed_test_data.py      # Script de seed para ambiente de teste
+│   ├── rebuild_synthetic_data.py  # Reconstroi o ambiente sintetico (banco + indice)
+│   └── seed_test_data.py          # Seed basico de dados de teste
+├── tests/
 └── src/
     └── glpi_sql_ai/
         ├── __init__.py
+        ├── tcc/                     # Monografia (LaTeX), figuras e referencias
         ├── agents/
         │   ├── __init__.py
         │   ├── supervisor.py         # Grafo supervisor (classifica e roteia)
@@ -117,6 +120,7 @@ glpi-sql-ai/
         ├── memory.py           # Memoria conversacional entre turnos
         ├── vector_store.py     # ChromaDB + OpenAI Embeddings (busca semantica)
         ├── knowledge_base.py   # Modulo de acesso a API REST do GLPI
+        ├── console.py          # Saida formatada no terminal (ANSI)
         ├── services.py         # Logica de negocio (legado)
         └── main.py             # Loop principal do chat interativo
 ```
@@ -209,7 +213,7 @@ DEEPSEEK_API_KEY="sk-..."
 
 # Credenciais do Banco de Dados
 DB_HOST="localhost"
-DB_NAME="glpi"
+DB_NAME="glpidb"
 DB_USER="root"
 DB_PASSWORD="senha"
 
@@ -319,7 +323,7 @@ O `rebuild_synthetic_data.py` cria:
   * **10 artigos** na base de conhecimento (`glpi_knowbaseitems`) sobre temas de suporte de TI (computador lento, reset de senha, impressora, e-mail, VPN, certificado digital, backup, rede, software)
   * **anonimizacao** de usuarios, setores e categorias — nenhum dado pessoal real permanece
 
-> Apos o rebuild, reindexe a base vetorial (o `seed_test_data.py` faz a indexacao; ou rode a aplicacao, que sincroniza a KB na inicializacao).
+> O `rebuild_synthetic_data.py` ja reindexa o ChromaDB ao final, deixando banco e indice vetorial sincronizados (requer `OPENAI_API_KEY` para gerar os embeddings).
 
 Com os dados de teste ativos, voce pode testar perguntas como:
   * `quantos chamados atrasados existem?`

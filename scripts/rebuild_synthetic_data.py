@@ -332,9 +332,44 @@ KB_ARTICLES = [
 ]
 
 
+def reindex_vector_store():
+    """Reindexa o ChromaDB com os artigos atualmente no banco.
+
+    Sem esta etapa o banco relacional e o indice vetorial ficam dessincronizados:
+    o RAG continuaria respondendo com os artigos antigos.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        log("  [AVISO] OPENAI_API_KEY nao configurada. Pulando reindexacao vetorial.")
+        return
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+    from glpi_sql_ai.vector_store import KBVectorStore
+
+    cn = mysql.connector.connect(**DB)
+    c = cn.cursor()
+    c.execute("SELECT id, name, answer FROM glpi_knowbaseitems ORDER BY id")
+    articles = [
+        {"id": r[0], "name": r[1] or "", "answer": r[2] or ""} for r in c.fetchall()
+    ]
+    c.close()
+    cn.close()
+
+    if not articles:
+        log("  [AVISO] Nenhum artigo encontrado para indexar.")
+        return
+
+    persist_dir = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+    vs = KBVectorStore(api_key=api_key, persist_dir=persist_dir)
+    count = vs.index_articles(articles)
+    log(f"  Base vetorial reindexada: {count} artigos no ChromaDB.")
+
+
 if __name__ == "__main__":
     log("=" * 60)
     log("  Reconstrucao de ambiente sintetico - GLPI SQL AI")
     log("=" * 60)
     rebuild()
-    log("\nConcluido. Reindexe a base vetorial e rode os testes.")
+    log("\nReindexando base vetorial...")
+    reindex_vector_store()
+    log("\nConcluido. Ambiente sintetico pronto (banco + indice vetorial).")
