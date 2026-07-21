@@ -44,8 +44,9 @@ def run_chat_application(ctx: AppContext, memory: ConversationMemory) -> None:
     while True:
         try:
             user_question = input(prompt_str())
+            command = user_question.strip().lower()
 
-            if user_question.lower() in ["sair", "exit", "fim", "quit"]:
+            if command in ("sair", "exit", "fim", "quit"):
                 status("OK", "Ate logo!", tag_color="\033[92m")
                 break
 

@@ -55,9 +55,17 @@ class GLPIKnowledgeBase:
 
         try:
             url = f"{self.glpi_url}/apirest.php/KnowbaseItem"
-            response = requests.get(url, headers=self.headers, timeout=10)
+            # A API do GLPI pagina por padrao (~50 itens por pagina) e sinaliza
+            # resultado parcial com HTTP 206. Sem o parametro 'range', apenas a
+            # primeira pagina seria indexada e o restante ficaria invisivel ao RAG.
+            response = requests.get(
+                url,
+                headers=self.headers,
+                params={"range": "0-9999"},
+                timeout=10,
+            )
 
-            if response.status_code == 200:
+            if response.status_code in (200, 206):
                 self.all_articles = response.json()
                 logger.info(
                     "%d artigos da Base de Conhecimento carregados.",

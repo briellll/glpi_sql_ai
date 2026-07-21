@@ -37,8 +37,10 @@ def extract_ticket_id(question: str) -> str | None:
     Returns:
         ID do chamado como string ou None se não encontrar
     """
+    # \b evita casar 'id' no interior de outras palavras (ex.: "david 45"),
+    # que antes produzia IDs de chamado falsos.
     match = re.search(
-        r"(?:id\s*|chamado\s*|ticket\s*)(?:#|n[°º]\s*)?(\d+)",
+        r"\b(?:id|chamado|ticket)\b\s*(?:#|n[°º]\s*)?(\d+)",
         question,
         re.IGNORECASE,
     )
