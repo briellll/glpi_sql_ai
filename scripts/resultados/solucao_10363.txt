@@ -1,0 +1,19 @@
+Chamado 10363
+Titulo: Impressora nao conecta na rede
+
+Artigos recuperados:
+- Impressora de rede - troubleshooting
+- Ponto de rede sem link
+- Lentidao na rede local - diagnostico
+
+Resposta:
+Com base no artigo **“Impressora de rede - troubleshooting”**, siga os passos abaixo:
+
+1. Verifique se a impressora está ligada e conectada; LED de rede aceso.
+2. Execute ping para o IP da impressora.
+3. Acesse a interface web da impressora para checar suprimentos e rede.
+4. Remova e reinstale a impressora no computador do usuário.
+5. Verifique a fila no servidor de impressão.
+6. Reinicie o serviço Spooler de Impressão.
+
+**Causas comuns:** cabo desconectado, IP conflitante, driver corrompido.

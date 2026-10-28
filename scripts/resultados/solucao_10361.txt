@@ -1,0 +1,20 @@
+Chamado 10361
+Titulo: Computador extremamente lento ao iniciar
+
+Artigos recuperados:
+- Computador lento - diagnostico e solucao
+- Computador nao liga
+- Remocao de virus e malware
+
+Resposta:
+Com base no artigo relevante **Computador lento - diagnostico e solucao** (Artigo 1), o procedimento descrito é:
+
+**Procedimento para diagnosticar computador lento:**
+1. Verifique os programas que iniciam com o Windows (msconfig). Desabilite aplicativos desnecessarios.
+2. Execute o Gerenciador de Tarefas e verifique uso de CPU, memoria e disco.
+3. Limpe arquivos temporarios com a Limpeza de Disco.
+4. Verifique se o antivirus roda varredura em horario comercial.
+5. Execute chkdsk /f para verificar erros no disco.
+6. Se persistir, considere upgrade de RAM ou troca para SSD.
+
+Ref: Procedimento TI-SUP-001...

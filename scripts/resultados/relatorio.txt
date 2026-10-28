@@ -1,0 +1,36 @@
+======================================================================
+PARTE A - Recuperacao na base vetorial (top-1)
+======================================================================
+ID | consulta | esperado | top-1 | sim 1o | top-2 | sim 2o | status
+CT07 | computador lento | Computador lento - diagnostico e solucao | Computador lento - diagnostico e solucao | 0.692 | Computador nao liga | 0.436 | OK
+CT08 | reset de senha login | Reset de senha e desbloqueio de usuario | Reset de senha e desbloqueio de usuario | 0.630 | Senha expirada - troca obrigatoria no logon | 0.580 | OK
+CT09 | impressora rede configuração | Impressora de rede - troubleshooting | Impressora de rede - troubleshooting | 0.672 | Configuracao de impressora local USB | 0.617 | OK
+CT10 | email outlook fora do ar | E-mail Outlook - problemas comuns e solucoes | E-mail Outlook - problemas comuns e solucoes | 0.572 | Assinatura de e-mail padrao no Outlook | 0.457 | OK
+CT11 | certificado digital vencido | Renovacao de certificado digital A1/A3 | Renovacao de certificado digital A1/A3 | 0.581 | Erro de certificado SSL no navegador | 0.527 | OK
+N01 | papel preso na impressora | Impressora com papel atolado | Impressora com papel atolado | 0.665 | Driver de impressora - instalacao e atualizacao | 0.520 | OK
+N02 | tela azul com codigo de erro ao ligar o computador | Tela azul (BSOD) - diagnostico | Tela azul (BSOD) - diagnostico | 0.711 | Computador nao liga | 0.531 | OK
+P01 | máquina travando | Computador lento - diagnostico e solucao | Atualizacao do Windows travada | 0.459 | Impressora com papel atolado | 0.452 | FALHA
+P02 | o PC demora uma eternidade para abrir os programas | Computador lento - diagnostico e solucao | Computador lento - diagnostico e solucao | 0.558 | Atualizacao do Windows travada | 0.407 | OK
+P03 | não consigo fazer login no Windows, aparece acesso negado | Reset de senha e desbloqueio de usuario | Senha expirada - troca obrigatoria no logon | 0.511 | Erro de certificado SSL no navegador | 0.494 | FALHA
+P04 | não consigo imprimir na máquina compartilhada do andar | Impressora de rede - troubleshooting | Impressora de rede - troubleshooting | 0.562 | Configuracao de impressora local USB | 0.547 | OK
+P05 | não estou recebendo mensagens na minha caixa de correio | E-mail Outlook - problemas comuns e solucoes | Caixa de correio cheia - limite de armazenamento | 0.506 | E-mail Outlook - problemas comuns e solucoes | 0.413 | FALHA
+P06 | não consigo acessar os sistemas da empresa trabalhando de casa | Configuracao de VPN para acesso remoto | Sites e sistemas nao abrem por nome (DNS) | 0.585 | Wi-Fi corporativo nao conecta | 0.514 | FALHA
+P07 | o token do e-CNPJ expirou | Renovacao de certificado digital A1/A3 | Renovacao de certificado digital A1/A3 | 0.488 | Senha expirada - troca obrigatoria no logon | 0.419 | OK
+P08 | apaguei sem querer uma planilha da pasta da rede, dá para recuperar? | Backup e restauracao de arquivos | Arquivo do Excel corrompido - recuperacao | 0.566 | Recuperacao de documento do Office nao salvo | 0.544 | FALHA
+P09 | a internet do setor está muito devagar em todos os computadores | Lentidao na rede local - diagnostico | Lentidao na rede local - diagnostico | 0.540 | Computador lento - diagnostico e solucao | 0.477 | OK
+P10 | preciso colocar um programa novo no meu computador, ele é liberado? | Instalacao de software homologado | Instalacao de software homologado | 0.520 | Atualizacao do Windows travada | 0.455 | OK
+P11 | liguei um equipamento de impressão direto no meu computador pelo cabo e ele não reconhece | Configuracao de impressora local USB | Configuracao de impressora local USB | 0.602 | Impressora de rede - troubleshooting | 0.542 | OK
+P12 | a impressora do setor parou de funcionar para todo mundo | Impressora de rede - troubleshooting | Impressora com papel atolado | 0.522 | Impressora de rede - troubleshooting | 0.511 | FALHA
+
+Total OK: 13/19
+
+======================================================================
+PARTE B - Geracao de solucoes
+======================================================================
+10367 | Certificado digital vencido - NF-e bloqueada | Renovacao de certificado digital A1/A3; Erro de certificado SSL no navegador; Senha expirada - troca obrigatoria no logon | SQL 2034ms | KB 376ms | LLM 3114ms | total 5.52s
+10361 | Computador extremamente lento ao iniciar | Computador lento - diagnostico e solucao; Computador nao liga; Remocao de virus e malware | SQL 2050ms | KB 1552ms | LLM 6561ms | total 10.16s
+10362 | Usuario nao consegue fazer login no sistema | Reset de senha e desbloqueio de usuario; Senha expirada - troca obrigatoria no logon; E-mail Outlook - problemas comuns e solucoes | SQL 2067ms | KB 444ms | LLM 4933ms | total 7.44s
+10371 | Servico de e-mail fora do ar para todo setor | E-mail Outlook - problemas comuns e solucoes; Assinatura de e-mail padrao no Outlook; Sites e sistemas nao abrem por nome (DNS) | SQL 2052ms | KB 420ms | LLM 2912ms | total 5.38s
+10363 | Impressora nao conecta na rede | Impressora de rede - troubleshooting; Ponto de rede sem link; Lentidao na rede local - diagnostico | SQL 2052ms | KB 357ms | LLM 5748ms | total 8.16s
+10368 | Acesso remoto VPN nao estabelece conexao | Configuracao de VPN para acesso remoto; Wi-Fi corporativo nao conecta; Reset de senha e desbloqueio de usuario | SQL 2073ms | KB 428ms | LLM 4360ms | total 6.86s
+10369 | Ramal telefonico sem audio | Computador nao liga; Ponto de rede sem link; Teclado ou mouse sem resposta | SQL 2036ms | KB 402ms | LLM 1552ms | total 3.99s

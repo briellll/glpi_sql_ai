@@ -1,0 +1,20 @@
+Chamado 10368
+Titulo: Acesso remoto VPN nao estabelece conexao
+
+Artigos recuperados:
+- Configuracao de VPN para acesso remoto
+- Wi-Fi corporativo nao conecta
+- Reset de senha e desbloqueio de usuario
+
+Resposta:
+Com base na base de conhecimento do GLPI, o artigo relevante para este chamado é o **Artigo 1: Configuracao de VPN para acesso remoto**, que trata de configuração e solução de problemas de VPN, incluindo erro de autenticação de token.
+
+Procedimento descrito no artigo:
+
+1. Verifique se o cliente VPN esta instalado e atualizado.
+2. Confirme credenciais: usuario de rede + senha + token.
+3. Verifique a URL/IP do servidor VPN.
+4. Teste conectividade com ping ao servidor.
+5. Verifique bloqueio de porta no firewall (UDP 443/500/4500).
+6. Sincronize o token se fora de sincronia; reinicie o cliente.
+7. Se persistir, abrir chamado para a equipe de Redes.

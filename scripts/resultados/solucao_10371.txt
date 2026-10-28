@@ -1,0 +1,24 @@
+Chamado 10371
+Titulo: Servico de e-mail fora do ar para todo setor
+
+Artigos recuperados:
+- E-mail Outlook - problemas comuns e solucoes
+- Assinatura de e-mail padrao no Outlook
+- Sites e sistemas nao abrem por nome (DNS)
+
+Resposta:
+## Artigo relevante: *E-mail Outlook - problemas comuns e solucoes*
+
+Com base na base de conhecimento do GLPI, o artigo acima é o que se aplica ao problema descrito no chamado 10371 (usuários sem acesso ao Outlook). Seguem os passos exatamente como descritos no artigo:
+
+**Solucionar problemas de e-mail/Outlook:**
+
+1. Verifique a conectividade de rede (acesso ao Exchange).
+2. Teste o Outlook Web Access (OWA) para isolar o problema.
+3. Crie um novo perfil do Outlook (Painel de Controle > Mail).
+4. Limpe o cache de credenciais no Gerenciador de Credenciais.
+5. Execute o Assistente de Reparacao do Office.
+6. Como ultimo recurso, repare a instalacao do Office.
+7. Servidor: confirmar Exchange operacional e espaco em disco.
+
+*Observação: os demais artigos da base (assinatura padrão no Outlook e falha de resolução de nomes/DNS) não tratam do erro relatado e, por isso, não foram utilizados.*

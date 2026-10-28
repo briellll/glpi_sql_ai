@@ -1,0 +1,34 @@
+Chamado 10362
+Titulo: Usuario nao consegue fazer login no sistema
+
+Artigos recuperados:
+- Reset de senha e desbloqueio de usuario
+- Senha expirada - troca obrigatoria no logon
+- E-mail Outlook - problemas comuns e solucoes
+
+Resposta:
+Com base na base de conhecimento do GLPI, identifiquei artigos relevantes para o chamado 10362 (Acesso e Login — credenciais inválidas / reset de senha).
+
+## Artigo: "Reset de senha e desbloqueio de usuario"
+
+Procedimento para reset de senha:
+1. Acesse o Active Directory (ADUC) com credenciais administrativas.
+2. Localize o usuario na OU do setor.
+3. Botao direito > Redefinir Senha.
+4. Informe senha temporaria conforme a politica.
+5. Marque "O usuario deve alterar a senha no proximo logon".
+6. Se necessario, desbloqueie a conta em Account > Unlock Account.
+
+Causas comuns: multiplas tentativas incorretas, conta expirada.
+
+## Artigo: "Senha expirada - troca obrigatoria no logon"
+
+Trocar senha expirada no logon:
+1. Na tela de logon, informe usuario e senha atual.
+2. Aguarde o aviso de que a senha expirou pela politica do dominio.
+3. Digite a nova senha conforme os requisitos de complexidade.
+4. Confirme a nova senha no campo de repeticao.
+5. Se a tela nao aparecer, pressione Ctrl+Alt+Del e escolha Alterar senha.
+6. Faca logon novamente e valide o acesso aos sistemas.
+
+Observação: os artigos "Reset de senha e desbloqueio de usuario" e "Senha expirada - troca obrigatoria no logon" são os únicos da base de conhecimento aplicáveis a este chamado. Não há, na base fornecida, artigo específico sobre não recebimento do e-mail de reset de senha.

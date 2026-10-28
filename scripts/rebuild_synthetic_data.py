@@ -215,7 +215,7 @@ def rebuild():
     log(f"  {33} chamados genericos inseridos (total tickets ~40)")
 
     # ---------------------------------------------------------------
-    # 4. Base de conhecimento ficticia (10 artigos)
+    # 4. Base de conhecimento ficticia (30 artigos)
     # ---------------------------------------------------------------
     author = 2
     kb = KB_ARTICLES
@@ -329,6 +329,172 @@ KB_ARTICLES = [
      "<li>Aguarde o reconhecimento automatico do Windows.</li>"
      "<li>Se necessario, instale o driver do fabricante.</li>"
      "<li>Imprima uma pagina de teste para validar.</li></ol>"},
+    {"name": "Impressora com papel atolado",
+     "answer": "<p><strong>Procedimento para remover papel atolado:</strong></p><ol>"
+     "<li>Desligue a impressora e desconecte o cabo de energia.</li>"
+     "<li>Abra a tampa de acesso seguindo as setas indicadas no equipamento.</li>"
+     "<li>Retire o papel preso puxando sempre no sentido da saida, sem rasgar.</li>"
+     "<li>Remova os restos de papel e verifique os roletes de tracao.</li>"
+     "<li>Confira a bandeja e nao ultrapasse a marca de capacidade maxima.</li>"
+     "<li>Ligue a impressora e imprima uma pagina de teste.</li></ol>"
+     "<p><strong>Causas comuns:</strong> papel umido, folhas dobradas, bandeja sobrecarregada.</p>"},
+    {"name": "Driver de impressora - instalacao e atualizacao",
+     "answer": "<p><strong>Instalar ou atualizar driver de impressora:</strong></p><ol>"
+     "<li>Identifique o modelo exato da impressora e o sistema operacional.</li>"
+     "<li>Baixe o driver mais recente no site do fabricante ou no repositorio interno.</li>"
+     "<li>Remova o driver antigo em Painel de Controle &gt; Dispositivos e Impressoras.</li>"
+     "<li>Nas propriedades da impressora, aba Avancado, exclua o driver corrompido.</li>"
+     "<li>Execute o instalador baixado e siga o assistente.</li>"
+     "<li>Adicione a impressora novamente e imprima uma pagina de teste.</li></ol>"
+     "<p><strong>Atencao:</strong> a instalacao exige perfil de administrador local.</p>"},
+    {"name": "Wi-Fi corporativo nao conecta",
+     "answer": "<p><strong>Reconectar o Wi-Fi corporativo:</strong></p><ol>"
+     "<li>Confirme que o Wi-Fi esta ligado e o modo aviao esta desativado.</li>"
+     "<li>Selecione a rede corporativa e informe as credenciais do dominio.</li>"
+     "<li>Se aparecer aviso de certificado, valide o servidor de autenticacao com a TI.</li>"
+     "<li>Em Configuracoes &gt; Rede e Internet &gt; Wi-Fi, use Esquecer a rede.</li>"
+     "<li>Conecte novamente e digite usuario e senha atualizados.</li>"
+     "<li>Se persistir, remova o perfil salvo e faca logon na rede cabeada.</li></ol>"},
+    {"name": "Ponto de rede sem link",
+     "answer": "<p><strong>Verificar ponto de rede sem link:</strong></p><ol>"
+     "<li>Confirme se o LED da placa de rede esta apagado no computador.</li>"
+     "<li>Substitua o patch cord e confira o encaixe nos dois extremos.</li>"
+     "<li>Teste outro cabo entre a tomada de rede e a maquina.</li>"
+     "<li>Teste a mesma tomada com um notebook que funcione na rede.</li>"
+     "<li>Verifique no switch se a porta esta ativa e com LED aceso.</li>"
+     "<li>Se a porta estiver desabilitada, acione a equipe de Redes.</li></ol>"
+     "<p><strong>Causas comuns:</strong> cabo rompido, conector solto, porta do switch desativada.</p>"},
+    {"name": "Sites e sistemas nao abrem por nome (DNS)",
+     "answer": "<p><strong>Resolver falha de resolucao de nomes:</strong></p><ol>"
+     "<li>Teste o acesso ao sistema pelo endereco IP para confirmar o problema.</li>"
+     "<li>Abra o Prompt de Comando como administrador.</li>"
+     "<li>Execute <code>ipconfig /flushdns</code> para limpar o cache local.</li>"
+     "<li>Confira o servidor DNS configurado com <code>ipconfig /all</code>.</li>"
+     "<li>Teste a resolucao com <code>nslookup nome_do_sistema</code>.</li>"
+     "<li>Reinicie o servico Cliente DNS e tente o acesso novamente.</li></ol>"
+     "<p><strong>Observacao:</strong> se o nslookup falhar, acione a equipe de Redes.</p>"},
+    {"name": "Senha expirada - troca obrigatoria no logon",
+     "answer": "<p><strong>Trocar senha expirada no logon:</strong></p><ol>"
+     "<li>Na tela de logon, informe usuario e senha atual.</li>"
+     "<li>Aguarde o aviso de que a senha expirou pela politica do dominio.</li>"
+     "<li>Digite a nova senha conforme os requisitos de complexidade.</li>"
+     "<li>Confirme a nova senha no campo de repeticao.</li>"
+     "<li>Se a tela nao aparecer, pressione Ctrl+Alt+Del e escolha Alterar senha.</li>"
+     "<li>Faca logon novamente e valide o acesso aos sistemas.</li></ol>"},
+    {"name": "Caixa de correio cheia - limite de armazenamento",
+     "answer": "<p><strong>Liberar espaco na caixa de correio:</strong></p><ol>"
+     "<li>Verifique o aviso de cota no Outlook ou no webmail.</li>"
+     "<li>Ordene os itens por tamanho e exclua os anexos maiores.</li>"
+     "<li>Arquive mensagens antigas em arquivo local ou no OneDrive.</li>"
+     "<li>Esvazie as pastas Itens Excluidos e Lixo Eletronico.</li>"
+     "<li>Sincronize a caixa e confirme a liberacao do espaco.</li></ol>"
+     "<p><strong>Atencao:</strong> o limite da caixa e definido pela politica de TI.</p>"},
+    {"name": "Configuracao de e-mail corporativo no celular",
+     "answer": "<p><strong>Configurar e-mail corporativo no celular:</strong></p><ol>"
+     "<li>Instale o aplicativo de e-mail homologado pela empresa.</li>"
+     "<li>Escolha a opcao de conta corporativa ou Exchange.</li>"
+     "<li>Informe o endereco de e-mail completo e a senha de rede.</li>"
+     "<li>Aceite as politicas de seguranca solicitadas pelo servidor.</li>"
+     "<li>Aguarde a sincronizacao de e-mails, calendario e contatos.</li>"
+     "<li>Se solicitado, cadastre o codigo de verificacao em dois fatores.</li></ol>"},
+    {"name": "Computador nao liga",
+     "answer": "<p><strong>Verificar computador que nao liga:</strong></p><ol>"
+     "<li>Confirme se a tomada tem energia e teste outro equipamento nela.</li>"
+     "<li>Verifique o cabo de forca e a chave da fonte na parte traseira.</li>"
+     "<li>Com o cabo de forca desconectado, pressione o botao de power por 10 segundos para descarregar a placa.</li>"
+     "<li>Observe se ha LED aceso ou ruido de cooler ao ligar.</li>"
+     "<li>Se for notebook, remova a bateria e teste apenas com a fonte.</li>"
+     "<li>Se nao houver sinal, encaminhe o equipamento para manutencao.</li></ol>"},
+    {"name": "Tela azul (BSOD) - diagnostico",
+     "answer": "<p><strong>Diagnosticar tela azul (BSOD):</strong></p><ol>"
+     "<li>Anote o codigo de parada exibido na tela azul.</li>"
+     "<li>Reinicie o computador e verifique se o sistema inicia normalmente.</li>"
+     "<li>Liste os drivers e programas instalados nas ultimas 48 horas.</li>"
+     "<li>Desinstale ou atualize o driver suspeito.</li>"
+     "<li>Execute o teste de memoria do Windows com <code>mdsched</code>.</li>"
+     "<li>Verifique a saude do disco com <code>chkdsk /f</code>.</li></ol>"
+     "<p><strong>Causas comuns:</strong> driver incompativel, memoria com defeito, disco com setores ruins.</p>"},
+    {"name": "Mapeamento de unidade de rede",
+     "answer": "<p><strong>Mapear unidade de rede:</strong></p><ol>"
+     "<li>Confirme o caminho da pasta compartilhada com a equipe de TI.</li>"
+     "<li>Abra o Explorador de Arquivos e acesse Este Computador.</li>"
+     "<li>Clique em Mapear unidade de rede.</li>"
+     "<li>Escolha uma letra livre e informe o caminho da pasta.</li>"
+     "<li>Marque Reconectar ao entrar e clique em Concluir.</li>"
+     "<li>Informe as credenciais de dominio se forem solicitadas.</li></ol>"},
+    {"name": "Permissao de acesso a pasta compartilhada",
+     "answer": "<p><strong>Solicitar acesso a pasta compartilhada:</strong></p><ol>"
+     "<li>Identifique o caminho da pasta e o nivel de acesso necessario.</li>"
+     "<li>Abra um chamado informando usuario, setor e justificativa.</li>"
+     "<li>A TI valida a aprovacao do gestor responsavel pela pasta.</li>"
+     "<li>O acesso e concedido por grupo do Active Directory.</li>"
+     "<li>O usuario deve sair e entrar novamente para atualizar o token.</li>"
+     "<li>Teste a abertura e a gravacao de um arquivo na pasta.</li></ol>"},
+    {"name": "Remocao de virus e malware",
+     "answer": "<p><strong>Remover virus e malware:</strong></p><ol>"
+     "<li>Desconecte a maquina da rede para evitar propagacao.</li>"
+     "<li>Execute a varredura completa com o antivirus corporativo.</li>"
+     "<li>Coloque os itens detectados em quarentena e revise a lista.</li>"
+     "<li>Execute tambem a ferramenta de remocao de software malicioso.</li>"
+     "<li>Atualize as assinaturas do antivirus e repita a varredura.</li>"
+     "<li>Troque as senhas do usuario apos a limpeza.</li>"
+     "<li>Reconecte a rede apenas com a maquina validada.</li></ol>"},
+    {"name": "Atualizacao do Windows travada",
+     "answer": "<p><strong>Destravar a atualizacao do Windows:</strong></p><ol>"
+     "<li>Abra o Prompt de Comando como administrador.</li>"
+     "<li>Pare o servico Windows Update com <code>net stop wuauserv</code>.</li>"
+     "<li>Renomeie a pasta C:\\Windows\\SoftwareDistribution para .old.</li>"
+     "<li>Reinicie o servico com <code>net start wuauserv</code>.</li>"
+     "<li>Execute <code>sfc /scannow</code> para corrigir arquivos do sistema.</li>"
+     "<li>Abra o Windows Update e clique em Verificar atualizacoes.</li></ol>"},
+    {"name": "Monitor sem imagem",
+     "answer": "<p><strong>Resolver monitor sem imagem:</strong></p><ol>"
+     "<li>Verifique se o monitor esta ligado e com LED de energia aceso.</li>"
+     "<li>Reaperte o cabo de video nas duas pontas.</li>"
+     "<li>Confirme a entrada correta no menu do monitor (HDMI, DisplayPort ou VGA).</li>"
+     "<li>Teste outro cabo de video.</li>"
+     "<li>Teste o monitor em outro computador e vice-versa.</li>"
+     "<li>Se houver imagem na BIOS, verifique o driver de video.</li></ol>"},
+    {"name": "Teclado ou mouse sem resposta",
+     "answer": "<p><strong>Reativar teclado ou mouse sem resposta:</strong></p><ol>"
+     "<li>Verifique se o cabo USB esta firme ou se o receptor sem fio esta conectado.</li>"
+     "<li>Troque o periferico para outra porta USB, preferindo a traseira.</li>"
+     "<li>No caso de sem fio, substitua ou recarregue as pilhas.</li>"
+     "<li>Reemparelhe o dispositivo com o receptor.</li>"
+     "<li>Teste o periferico em outro computador.</li>"
+     "<li>No Gerenciador de Dispositivos, verifique erros e reinstale o driver.</li></ol>"},
+    {"name": "Arquivo do Excel corrompido - recuperacao",
+     "answer": "<p><strong>Recuperar arquivo do Excel corrompido:</strong></p><ol>"
+     "<li>No Excel, acesse Arquivo &gt; Abrir &gt; Procurar e selecione o arquivo.</li>"
+     "<li>Na seta ao lado do botao Abrir, escolha Abrir e Reparar; se o reparo falhar, use Extrair Dados.</li>"
+     "<li>Verifique as Versoes Anteriores do arquivo nas propriedades.</li>"
+     "<li>Procure copias na lixeira, no OneDrive ou no backup do servidor.</li>"
+     "<li>Verifique a pasta de AutoRecuperacao do Office em busca de versoes recentes.</li>"
+     "<li>Restaure a copia valida e salve com um novo nome.</li></ol>"},
+    {"name": "Recuperacao de documento do Office nao salvo",
+     "answer": "<p><strong>Recuperar documento do Office nao salvo:</strong></p><ol>"
+     "<li>Abra o aplicativo e acesse Arquivo &gt; Abrir &gt; Recuperar Documentos.</li>"
+     "<li>Escolha a opcao de documentos nao salvos.</li>"
+     "<li>Verifique a pasta AutoRecuperacao do Office em Arquivos Temporarios.</li>"
+     "<li>Localize o arquivo mais recente pelo nome e data.</li>"
+     "<li>Abra o arquivo e salve imediatamente em local seguro.</li>"
+     "<li>Se nao encontrar, acione a TI para tentar a recuperacao no perfil.</li></ol>"},
+    {"name": "Assinatura de e-mail padrao no Outlook",
+     "answer": "<p><strong>Criar a assinatura padrao no Outlook:</strong></p><ol>"
+     "<li>Abra o Outlook e acesse Arquivo &gt; Opcoes &gt; Email.</li>"
+     "<li>Clique em Assinaturas e selecione Novo.</li>"
+     "<li>Informe nome, cargo, setor e contatos conforme o modelo institucional.</li>"
+     "<li>Defina a fonte e as cores aprovadas pela comunicacao.</li>"
+     "<li>Marque a assinatura como padrao para novas mensagens e respostas.</li>"
+     "<li>Envie um e-mail de teste para validar a formatacao.</li></ol>"},
+    {"name": "Erro de certificado SSL no navegador",
+     "answer": "<p><strong>Resolver erro de certificado SSL no navegador:</strong></p><ol>"
+     "<li>Verifique se a data e a hora do computador estao corretas.</li>"
+     "<li>Confirme o endereco do sistema interno e se o cadeado aparece.</li>"
+     "<li>Abra os detalhes do certificado e verifique a validade e a cadeia.</li>"
+     "<li>Instale o certificado raiz interno no repositorio do Windows.</li>"
+     "<li>Limpe o cache do navegador e teste em uma janela anonima.</li>"
+     "<li>Se o erro persistir, encaminhe o caso para a TI com a mensagem exibida.</li></ol>"},
 ]
 
 

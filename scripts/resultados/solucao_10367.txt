@@ -1,0 +1,24 @@
+Chamado 10367
+Titulo: Certificado digital vencido - NF-e bloqueada
+
+Artigos recuperados:
+- Renovacao de certificado digital A1/A3
+- Erro de certificado SSL no navegador
+- Senha expirada - troca obrigatoria no logon
+
+Resposta:
+Com base na base de conhecimento do GLPI, o artigo relevante para o chamado é: **"Renovacao de certificado digital A1/A3"**.
+
+**Renovacao de certificado digital A1/A3**
+
+1. Identifique o tipo: A1 (arquivo) ou A3 (token/cartao).
+2. Acesse o site da Autoridade Certificadora com o token conectado.
+3. Localize 'Renovar Certificado' e siga o assistente.
+4. Valide a identidade por videoconferencia ou presencialmente.
+5. Baixe o novo certificado e instale no repositorio do Windows.
+6. Atualize a cadeia ICP-Brasil se necessario.
+7. Teste a emissao de uma NF-e de homologacao.
+
+Atenção: A1 vale 1 ano; renove com 30 dias de antecedencia.
+
+Observação: os demais artigos da base ("Erro de certificado SSL no navegador" e "Senha expirada - troca obrigatoria no logon") não são relevantes para o problema descrito neste chamado.

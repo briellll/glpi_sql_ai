@@ -1,0 +1,10 @@
+Chamado 10369
+Titulo: Ramal telefonico sem audio
+
+Artigos recuperados:
+- Computador nao liga
+- Ponto de rede sem link
+- Teclado ou mouse sem resposta
+
+Resposta:
+Não identifiquei nenhuma informação a respeito disso na base de conhecimento do GLPI.
