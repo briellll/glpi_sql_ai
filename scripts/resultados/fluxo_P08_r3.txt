@@ -1,0 +1,13 @@
+Caso P08 - execucao 3
+Consulta: apaguei sem querer uma planilha da pasta da rede, dá para recuperar?
+Esperado: Backup e restauracao de arquivos
+
+Artigos recuperados (ordem):
+- Arquivo do Excel corrompido - recuperacao
+- Recuperacao de documento do Office nao salvo
+- Mapeamento de unidade de rede
+
+Resposta:
+Não identifiquei nenhuma informação a respeito disso na base de conhecimento do GLPI.
+
+Os artigos disponíveis tratam de: recuperação de arquivo do Excel corrompido (Artigo 1), recuperação de documento do Office não salvo (Artigo 2) e mapeamento de unidade de rede (Artigo 3) — nenhum deles aborda a recuperação de arquivo apagado acidentalmente de uma pasta de rede.

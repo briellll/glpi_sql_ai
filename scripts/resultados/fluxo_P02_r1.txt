@@ -1,0 +1,24 @@
+Caso P02 - execucao 1
+Consulta: o PC demora uma eternidade para abrir os programas
+Esperado: Computador lento - diagnostico e solucao
+
+Artigos recuperados (ordem):
+- Computador lento - diagnostico e solucao
+- Atualizacao do Windows travada
+- Sites e sistemas nao abrem por nome (DNS)
+
+Resposta:
+Com base na base de conhecimento do GLPI, identifiquei o artigo relevante para o seu chamado:
+
+**Artigo: Computador lento - diagnostico e solucao**
+
+Procedimento para diagnosticar computador lento:
+
+1. Verifique os programas que iniciam com o Windows (msconfig). Desabilite aplicativos desnecessários.
+2. Execute o Gerenciador de Tarefas e verifique uso de CPU, memoria e disco.
+3. Limpe arquivos temporarios com a Limpeza de Disco.
+4. Verifique se o antivirus roda varredura em horario comercial.
+5. Execute chkdsk /f para verificar erros no disco.
+6. Se persistir, considere upgrade de RAM ou troca para SSD.
+
+Ref: Procedimento TI-SUP-001

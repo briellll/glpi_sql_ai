@@ -1,0 +1,11 @@
+Caso P06 - execucao 1
+Consulta: não consigo acessar os sistemas da empresa trabalhando de casa
+Esperado: Configuracao de VPN para acesso remoto
+
+Artigos recuperados (ordem):
+- Sites e sistemas nao abrem por nome (DNS)
+- Wi-Fi corporativo nao conecta
+- Senha expirada - troca obrigatoria no logon
+
+Resposta:
+Nao identifiquei nenhuma informacao a respeito disso na base de conhecimento do GLPI.

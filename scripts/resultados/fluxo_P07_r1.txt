@@ -1,0 +1,27 @@
+Caso P07 - execucao 1
+Consulta: o token do e-CNPJ expirou
+Esperado: Renovacao de certificado digital A1/A3
+
+Artigos recuperados (ordem):
+- Renovacao de certificado digital A1/A3
+- Senha expirada - troca obrigatoria no logon
+- Reset de senha e desbloqueio de usuario
+
+Resposta:
+Com base na base de conhecimento do GLPI, identifiquei o artigo relevante para o seu chamado: **"Renovacao de certificado digital A1/A3"**.
+
+Como o token do e-CNPJ corresponde a um certificado digital do tipo A3 (token/cartão), seguem os passos descritos no artigo:
+
+**Renovacao de certificado digital A1/A3**
+
+1. Identifique o tipo: A1 (arquivo) ou A3 (token/cartao).
+2. Acesse o site da Autoridade Certificadora com o token conectado.
+3. Localize 'Renovar Certificado' e siga o assistente.
+4. Valide a identidade por videoconferencia ou presencialmente.
+5. Baixe o novo certificado e instale no repositorio do Windows.
+6. Atualize a cadeia ICP-Brasil se necessario.
+7. Teste a emissao de uma NF-e de homologacao.
+
+**Atencao:** A1 vale 1 ano; renove com 30 dias de antecedencia.
+
+*Observação: os artigos 2 e 3 da base tratam de senha expirada e reset de senha/desbloqueio de usuário, portanto não se aplicam ao problema descrito neste chamado.*

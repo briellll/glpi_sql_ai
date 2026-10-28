@@ -1,0 +1,19 @@
+Caso P01 - execucao 1
+Consulta: máquina travando
+Esperado: Computador lento - diagnostico e solucao
+
+Artigos recuperados (ordem):
+- Atualizacao do Windows travada
+- Impressora com papel atolado
+- Computador lento - diagnostico e solucao
+
+Resposta:
+Não identifiquei nenhuma informação a respeito disso na base de conhecimento do GLPI.
+
+**Justificativa (com base apenas nos artigos fornecidos):**
+
+- **Artigo 1 – Atualizacao do Windows travada:** trata exclusivamente de destravar o serviço Windows Update (parar/renomear pasta SoftwareDistribution/reiniciar serviço, `sfc /scannow`). Não aborda máquina travando.
+- **Artigo 2 – Impressora com papel atolado:** trata de remoção de papel preso em impressora. Não aborda máquina travando.
+- **Artigo 3 – Computador lento - diagnostico e solucao:** trata de lentidão (msconfig, Gerenciador de Tarefas, Limpeza de Disco, chkdsk /f, upgrade de RAM/SSD). Não trata de travamentos/bloqueios da máquina.
+
+Como nenhum artigo da base de conhecimento é relevante para o problema descrito no chamado P01 ("máquina travando"), não há procedimento a reproduzir.

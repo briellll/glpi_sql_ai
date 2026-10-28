@@ -1,0 +1,11 @@
+Caso P01 - execucao 3
+Consulta: máquina travando
+Esperado: Computador lento - diagnostico e solucao
+
+Artigos recuperados (ordem):
+- Atualizacao do Windows travada
+- Impressora com papel atolado
+- Computador lento - diagnostico e solucao
+
+Resposta:
+Nao identifiquei nenhuma informacao a respeito disso na base de conhecimento do GLPI.

@@ -1,0 +1,22 @@
+Caso P06 - execucao 2
+Consulta: não consigo acessar os sistemas da empresa trabalhando de casa
+Esperado: Configuracao de VPN para acesso remoto
+
+Artigos recuperados (ordem):
+- Sites e sistemas nao abrem por nome (DNS)
+- Wi-Fi corporativo nao conecta
+- Senha expirada - troca obrigatoria no logon
+
+Resposta:
+Com base na base de conhecimento, o artigo aplicável é: **“Sites e sistemas nao abrem por nome (DNS)”**.
+
+Procedimento descrito no artigo:
+
+1. Teste o acesso ao sistema pelo endereco IP para confirmar o problema.
+2. Abra o Prompt de Comando como administrador.
+3. Execute `ipconfig /flushdns` para limpar o cache local.
+4. Confira o servidor DNS configurado com `ipconfig /all`.
+5. Teste a resolucao com `nslookup nome_do_sistema`.
+6. Reinicie o servico Cliente DNS e tente o acesso novamente.
+
+**Observação:** se o `nslookup` falhar, acione a equipe de Redes.

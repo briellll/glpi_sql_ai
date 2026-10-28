@@ -1,0 +1,17 @@
+Caso P09 - execucao 1
+Consulta: a internet do setor está muito devagar em todos os computadores
+Esperado: Lentidao na rede local - diagnostico
+
+Artigos recuperados (ordem):
+- Lentidao na rede local - diagnostico
+- Computador lento - diagnostico e solucao
+- Sites e sistemas nao abrem por nome (DNS)
+
+Resposta:
+Com base no artigo **“Lentidao na rede local - diagnostico”**, que é relevante para o chamado P09, os passos são:
+
+1. Teste a velocidade em mais de um equipamento.
+2. Verifique o uso de banda no switch/roteador.
+3. Cheque cabos e conexões do ponto afetado.
+4. Reinicie os equipamentos de rede se necessário.
+5. Escale para a equipe de Redes se o problema for no backbone.

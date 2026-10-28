@@ -1,0 +1,47 @@
+Caso P12 - execucao 2
+Consulta: a impressora do setor parou de funcionar para todo mundo
+Esperado: Impressora de rede - troubleshooting
+
+Artigos recuperados (ordem):
+- Impressora com papel atolado
+- Impressora de rede - troubleshooting
+- Driver de impressora - instalacao e atualizacao
+
+Resposta:
+## Soluções para o chamado P12 — "a impressora do setor parou de funcionar para todo mundo"
+
+Com base na base de conhecimento do GLPI, os artigos aplicáveis são os seguintes:
+
+---
+
+### 1) Artigo: **Impressora de rede - troubleshooting**
+
+Procedimento descrito no artigo para solucionar problemas de impressora de rede:
+
+1. Verifique se a impressora está ligada e conectada; LED de rede aceso.
+2. Execute ping para o IP da impressora.
+3. Acesse a interface web da impressora para checar suprimentos e rede.
+4. Remova e reinstale a impressora no computador do usuário.
+5. Verifique a fila no servidor de impressão.
+6. Reinicie o serviço Spooler de Impressão.
+
+Causas comuns indicadas no artigo: cabo desconectado, IP conflitante, driver corrompido.
+
+---
+
+### 2) Artigo: **Impressora com papel atolado**
+
+Procedimento descrito no artigo para remover papel atolado:
+
+1. Desligue a impressora e desconecte o cabo de energia.
+2. Abra a tampa de acesso seguindo as setas indicadas no equipamento.
+3. Retire o papel preso puxando sempre no sentido da saída, sem rasgar.
+4. Remova os restos de papel e verifique os roletes de tração.
+5. Confira a bandeja e não ultrapasse a marca de capacidade máxima.
+6. Ligue a impressora e imprima uma página de teste.
+
+Causas comuns indicadas no artigo: papel úmido, folhas dobradas, bandeja sobrecarregada.
+
+---
+
+**Observação:** o Artigo 3 ("Driver de impressora - instalação e atualização") trata de instalação/atualização de driver no equipamento do usuário e não foi detalhado aqui por não corresponder diretamente à falha geral descrita no chamado. Caso seja necessário, seus passos são: identificar o modelo exato da impressora e o sistema operacional; baixar o driver mais recente no site do fabricante ou no repositório interno; remover o driver antigo em Painel de Controle > Dispositivos e Impressoras; nas propriedades da impressora, aba Avançado, excluir o driver corrompido; executar o instalador baixado e seguir o assistente; adicionar a impressora novamente e imprimir uma página de teste (atenção: a instalação exige perfil de administrador local).

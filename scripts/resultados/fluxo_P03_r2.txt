@@ -1,0 +1,33 @@
+Caso P03 - execucao 2
+Consulta: não consigo fazer login no Windows, aparece acesso negado
+Esperado: Reset de senha e desbloqueio de usuario
+
+Artigos recuperados (ordem):
+- Senha expirada - troca obrigatoria no logon
+- Erro de certificado SSL no navegador
+- Reset de senha e desbloqueio de usuario
+
+Resposta:
+Com base na base de conhecimento do GLPI, os artigos relevantes para o chamado são:
+
+**Artigo 1: Senha expirada - troca obrigatoria no logon**
+
+Procedimento:
+1. Na tela de logon, informe usuario e senha atual.
+2. Aguarde o aviso de que a senha expirou pela politica do dominio.
+3. Digite a nova senha conforme os requisitos de complexidade.
+4. Confirme a nova senha no campo de repeticao.
+5. Se a tela nao aparecer, pressione Ctrl+Alt+Del e escolha Alterar senha.
+6. Faca logon novamente e valide o acesso aos sistemas.
+
+**Artigo 3: Reset de senha e desbloqueio de usuario**
+
+Procedimento para reset de senha:
+1. Acesse o Active Directory (ADUC) com credenciais administrativas.
+2. Localize o usuario na OU do setor.
+3. Botao direito > Redefinir Senha.
+4. Informe senha temporaria conforme a politica.
+5. Marque 'O usuario deve alterar a senha no proximo logon'.
+6. Se necessario, desbloqueie a conta em Account > Unlock Account.
+
+Causas comuns: multiplas tentativas incorretas, conta expirada.

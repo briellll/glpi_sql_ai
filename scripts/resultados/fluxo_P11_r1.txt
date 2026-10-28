@@ -1,0 +1,30 @@
+Caso P11 - execucao 1
+Consulta: liguei um equipamento de impressão direto no meu computador pelo cabo e ele não reconhece
+Esperado: Configuracao de impressora local USB
+
+Artigos recuperados (ordem):
+- Configuracao de impressora local USB
+- Impressora de rede - troubleshooting
+- Driver de impressora - instalacao e atualizacao
+
+Resposta:
+Com base na Base de Conhecimento do GLPI, identifiquei artigos relevantes para o seu chamado (impressora conectada diretamente ao computador por cabo e não reconhecida).
+
+**Artigo: Configuracao de impressora local USB**
+
+Configurar impressora local USB:
+1. Conecte a impressora a porta USB do computador.
+2. Aguarde o reconhecimento automatico do Windows.
+3. Se necessario, instale o driver do fabricante.
+4. Imprima uma pagina de teste para validar.
+
+**Artigo: Driver de impressora - instalacao e atualizacao**
+
+Instalar ou atualizar driver de impressora:
+1. Identifique o modelo exato da impressora e o sistema operacional.
+2. Baixe o driver mais recente no site do fabricante ou no repositorio interno.
+3. Remova o driver antigo em Painel de Controle > Dispositivos e Impressoras.
+4. Nas propriedades da impressora, aba Avancado, exclua o driver corrompido.
+5. Execute o instalador baixado e siga o assistente.
+6. Adicione a impressora novamente e imprima uma pagina de teste.
+Atencao: a instalacao exige perfil de administrador local.

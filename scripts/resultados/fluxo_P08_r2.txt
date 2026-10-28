@@ -1,0 +1,26 @@
+Caso P08 - execucao 2
+Consulta: apaguei sem querer uma planilha da pasta da rede, dá para recuperar?
+Esperado: Backup e restauracao de arquivos
+
+Artigos recuperados (ordem):
+- Arquivo do Excel corrompido - recuperacao
+- Recuperacao de documento do Office nao salvo
+- Mapeamento de unidade de rede
+
+Resposta:
+## Solução para o chamado P08 — Recuperação de planilha apagada da pasta de rede
+
+Com base na base de conhecimento do GLPI, o artigo aplicável é **"Arquivo do Excel corrompido - recuperacao"**, que trata da recuperação de arquivos do Excel e inclui procedimentos para localizar cópias do arquivo (lixeira, OneDrive, backup do servidor e Versões Anteriores).
+
+**Procedimento descrito no artigo "Arquivo do Excel corrompido - recuperacao":**
+
+1. No Excel, acesse Arquivo > Abrir > Procurar e selecione o arquivo.
+2. Na seta ao lado do botão Abrir, escolha Abrir e Reparar; se o reparo falhar, use Extrair Dados.
+3. Verifique as Versões Anteriores do arquivo nas propriedades.
+4. Procure cópias na lixeira, no OneDrive ou no backup do servidor.
+5. Verifique a pasta de AutoRecuperação do Office em busca de versões recentes.
+6. Restaure a cópia válida e salve com um novo nome.
+
+---
+
+Observação: os demais artigos da base ("Recuperacao de documento do Office nao salvo" e "Mapeamento de unidade de rede") não tratam da recuperação de um arquivo apagado de pasta de rede, portanto não foram utilizados.

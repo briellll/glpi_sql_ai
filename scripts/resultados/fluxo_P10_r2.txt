@@ -1,0 +1,16 @@
+Caso P10 - execucao 2
+Consulta: preciso colocar um programa novo no meu computador, ele é liberado?
+Esperado: Instalacao de software homologado
+
+Artigos recuperados (ordem):
+- Instalacao de software homologado
+- Atualizacao do Windows travada
+- Driver de impressora - instalacao e atualizacao
+
+Resposta:
+Com base no artigo **“Instalacao de software homologado”**, o procedimento descrito é:
+
+1. Confirme que o software está na lista de homologados.
+2. Baixe o instalador do repositório interno.
+3. Execute a instalação com privilégios administrativos.
+4. Registre a licença e o número do chamado.
