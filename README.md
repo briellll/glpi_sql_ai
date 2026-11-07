@@ -1,367 +1,168 @@
------
-
 # GLPI SQL AI
 
-Um **assistente de IA** que entende perguntas em **linguagem natural** sobre o banco de dados **GLPI**, gera a **query SQL automaticamente**, executa-a e responde em **portugues natural** — tudo direto no seu **terminal**.
+Assistente conversacional de terminal que integra modelos de linguagem (LLMs) ao [GLPI](https://glpi-project.org/). Ele responde perguntas em linguagem natural sobre os chamados, consultando o banco de dados do GLPI, e sugere soluções para um chamado com base nos artigos da base de conhecimento, por meio de RAG (*Retrieval-Augmented Generation*).
 
------
+Projeto desenvolvido como Trabalho de Conclusão de Curso do Bacharelado em Sistemas de Informação da Universidade Federal do Oeste do Pará (UFOPA).
 
-## Sumario
-
-  * [Funcionalidades]
-  * [Arquitetura Multi-Agente]
-  * [Estrutura do Projeto]
-  * [Tecnologias Utilizadas]
-  * [Instalacao e Configuracao]
-  * [Como Usar]
-  * [Fluxo da Aplicacao]
-  * [Ambiente de Teste (Seed)]
-  * [Exemplos de Perguntas]
-  * [Como Contribuir]
-  * [Licenca]
-
------
+> **Protótipo acadêmico.** Foi desenvolvido e avaliado sobre uma instância local do GLPI com dados sintéticos. Leia a seção [Limitações e segurança](#limitações-e-segurança) antes de conectá-lo a qualquer banco real.
 
 ## Funcionalidades
 
-  * **Consultas em Linguagem Natural**
-    Faca perguntas como "quantos chamados atrasados existem?" — e receba respostas completas sem escrever uma linha de SQL.
+- **Soluções para um chamado (fluxo principal, RAG).** Para "soluções para o chamado 10367", o sistema busca o chamado no banco, recupera os três artigos mais próximos na base de conhecimento por busca semântica (ChromaDB + embeddings da OpenAI) e gera os passos de solução. O prompt aplica *grounding*: a resposta deve usar apenas o conteúdo dos artigos recuperados e citar o artigo de origem; se nenhum artigo for pertinente, o modelo declara a ausência em vez de inventar.
+- **Consultas em linguagem natural (Text-to-SQL).** Para "quantos chamados atrasados existem?", o modelo gera a consulta SQL, que é executada no MySQL do GLPI; em caso de erro, a consulta é corrigida automaticamente (até 3 tentativas) e o resultado é devolvido em linguagem natural.
+- **Classificação de intenção.** Um supervisor decide se a pergunta é uma consulta aos dados ou um pedido de soluções.
+- **Guardião de escopo.** Perguntas fora do domínio de helpdesk são bloqueadas antes de chegar aos *workers*. O bloqueio é o padrão: a pergunta só passa se o modelo a classificar explicitamente como dentro do escopo.
+- **Verificador de frescor da base de conhecimento.** Na inicialização, o sistema compara a contagem de artigos e a data da última modificação no MySQL com os metadados da última sincronização. Se nada mudou, usa o índice vetorial já gravado e não chama a API do GLPI.
+- **Memória conversacional** dos turnos recentes.
 
-  * **Classificacao Automatica de Intencao**
-    O modelo entende se voce quer **consultar dados** ou **gerar solucoes para um chamado especifico**.
+## Arquitetura
 
-  * **Validacao de Escopo (Guardrail)**
-    Um no `guard_scope` no grafo supervisor bloqueia perguntas fora do dominio helpdesk/GLPI (ex: saude, esportes, curiosidades), impedindo que cheguem aos workers.
-
-  * **Integracao com a Base de Conhecimento GLPI**
-    Enriquece as sugestoes de solucao com artigos diretamente da sua `Knowbase` do GLPI, indexados via **busca semantica vetorial** (ChromaDB + OpenAI Embeddings).
-
-  * **Engenharia de Prompt Avancada**
-    Inclui um "Dicionario de Termos de Negocio" e um mapa detalhado das tabelas do GLPI, garantindo queries mais precisas e contextualizadas.
-
-  * **Auto-correcao de SQL**
-    O worker de SQL tenta executar a query e, em caso de erro, corrige automaticamente ate **3 tentativas**.
-
-  * **Arquitetura Multi-Agente (LangGraph)**
-    Grafo supervisor que roteia entre workers especializados — `sql_worker` para consultas e `solutions_worker` para solucoes com base de conhecimento.
-
-  * **Integracao com o GLPI**
-    Totalmente adaptado a estrutura de dados do sistema de chamados GLPI (MySQL) e sua API REST para a Base de Conhecimento.
-
------
-
-## Arquitetura Multi-Agente
-
-O sistema utiliza **LangGraph** para orquestrar um grafo supervisor com dois workers especializados.
+O fluxo é orquestrado com LangGraph: um grafo supervisor e dois *workers* com estado próprio.
 
 ```
-[Usuario faz pergunta]
+[Pergunta do usuário]
         |
-[Supervisor: classificacao de intencao]
+[Supervisor: classificação de intenção]
         |
-[Supervisor: validacao de escopo]
-        |
+[Supervisor: guardião de escopo] --(fora do escopo)--> [Recusa educada]
        / \
       /   \
-[SQL Worker]    [Solutions Worker]
-     |                |
- Gera SQL        Extrai ID do chamado
-     |            Busca detalhes (MySQL)
- Executa SQL     Busca artigos KB (vetorial)
-     |            Gera solucoes (LLM)
- Auto-corrige         |
- (ate 3x)        Resposta final
-     |                |
-     \______________/
-            |
-    [Resposta no terminal]
-```
-```
-[Fora do escopo]
-        |
-[Resposta educada de recusa — sem acionar workers]
+[sql_worker]                 [solutions_worker]
+ Gera SQL (LLM)               Extrai o ID do chamado
+ Executa no MySQL             Busca o chamado (MySQL)
+ Autocorreção (até 3x)        Busca 3 artigos (ChromaDB)
+ Formata a resposta           Gera a solução com grounding (LLM)
+      \                           /
+       \_________________________/
+                   |
+         [Resposta no terminal]
 ```
 
-| Agente | Funcao |
-| ------ | ------ |
-| Supervisora | Classifica intencao (`database_query` ou `get_solutions`), valida escopo e roteia para o worker |
-| Guardiao de Escopoa | Bloqueia perguntas fora do dominio helpdesk/GLPI com recusa educada |
-| SQL Workera | Gera SQL, executa no MySQL, auto-corrige erros, formata resposta natural |
-| Solutions Workera | Extrai ID do chamado, busca na base vetorial (ChromaDB), gera solucoes baseadas nos artigos |
+Modelo de linguagem: DeepSeek V4 Flash, pela API compatível com a da OpenAI. Se `DEEPSEEK_API_KEY` não estiver configurada, o sistema usa o `gpt-3.5-turbo` da OpenAI. São usadas duas instâncias: temperatura 0 para classificação, escopo, SQL e formatação, e 0,3 para a geração de soluções.
 
------
-
-## Estrutura do Projeto
+## Estrutura do projeto
 
 ```
-glpi-sql-ai/
-├── .env                       # Configuracoes de ambiente (chaves, DB, GLPI API)
-├── pyproject.toml             # Dependencias e metadata do Poetry
-├── README.md
+glpi_sql_ai/
+├── pyproject.toml / poetry.lock    # Dependências (Poetry)
+├── src/glpi_sql_ai/
+│   ├── main.py                     # Loop do chat no terminal
+│   ├── config.py                   # AppContext: banco (NullPool + timeout), LLMs, índice vetorial, verificador de frescor
+│   ├── agents/
+│   │   ├── supervisor.py           # Grafo supervisor: intenção, guardião de escopo e roteamento
+│   │   ├── sql_worker.py           # Text-to-SQL com autocorreção
+│   │   └── solutions_worker.py     # Fluxo RAG de soluções
+│   ├── chains.py                   # Cadeias LangChain (prompt | llm | parser)
+│   ├── prompts.py                  # Prompts, dicionário de negócio e regras de grounding
+│   ├── vector_store.py             # ChromaDB + text-embedding-3-small
+│   ├── knowledge_base.py           # API REST do GLPI e montagem do contexto RAG
+│   ├── tools/db_tools.py           # Acesso ao banco
+│   ├── memory.py                   # Memória conversacional
+│   ├── console.py                  # Saída colorida no terminal
+│   └── services.py                 # Utilitários
 ├── scripts/
-│   ├── rebuild_synthetic_data.py  # Reconstroi o ambiente sintetico (banco + indice)
-│   └── seed_test_data.py          # Seed basico de dados de teste
-├── tests/
-└── src/
-    └── glpi_sql_ai/
-        ├── __init__.py
-        ├── tcc/                     # Monografia (LaTeX), figuras e referencias
-        ├── agents/
-        │   ├── __init__.py
-        │   ├── supervisor.py         # Grafo supervisor (classifica e roteia)
-        │   ├── sql_worker.py         # Worker de consultas SQL com auto-correcao
-        │   └── solutions_worker.py   # Worker de solucoes com busca vetorial
-        ├── tools/
-        │   ├── __init__.py
-        │   └── db_tools.py           # Wrappers de acesso ao banco
-        ├── config.py           # AppContext: DB, LLM, VectorStore e KB
-        ├── prompts.py          # Templates de prompts e instrucoes do sistema
-        ├── chains.py           # Factories das LangChains
-        ├── memory.py           # Memoria conversacional entre turnos
-        ├── vector_store.py     # ChromaDB + OpenAI Embeddings (busca semantica)
-        ├── knowledge_base.py   # Modulo de acesso a API REST do GLPI
-        ├── console.py          # Saida formatada no terminal (ANSI)
-        ├── services.py         # Logica de negocio (legado)
-        └── main.py             # Loop principal do chat interativo
+│   ├── rebuild_synthetic_data.py   # Recria o ambiente de teste sintético (APAGA dados reais)
+│   ├── anonimizar_banco.py         # Remove dados pessoais e credenciais remanescentes
+│   ├── reload_kb.py                # Recarrega só a base de conhecimento (30 artigos)
+│   ├── seed_test_data.py           # Seed básico, sem limpar a base
+│   ├── avaliar_rag.py              # Avaliação: recuperação e geração de soluções, com tempos
+│   ├── avaliar_parafrases_fluxo.py # Avaliação: fluxo completo com 12 paráfrases × 3 execuções
+│   └── resultados/                 # Saídas das avaliações
+└── tests/
 ```
 
------
+## Instalação
 
-## Tecnologias Utilizadas
-
-  * **Python 3.13+**
-  * **Poetry** — gerenciamento de pacotes e ambientes virtuais
-  * **LangChain + LangGraph** — orquestracao de prompts, chains e grafo multi-agente
-  * **DeepSeek V4 Flash** — modelo de linguagem principal (via API compativel com OpenAI)
-  * **OpenAI GPT-3.5-Turbo** — modelo alternativo (fallback, quando `DEEPSEEK_API_KEY` nao esta configurada)
-  * **OpenAI text-embedding-3-small** — embeddings para busca semantica
-  * **ChromaDB** — banco vetorial para busca semantica na base de conhecimento
-  * **MySQL** — banco de dados do GLPI
-  * **Requests** — para comunicacao com a API REST do GLPI
-  * **python-dotenv** — gerenciamento seguro de variaveis de ambiente
-
------
-
-## Instalacao e Configuracao
-
-### 1. Pre-requisitos
-
-  * Python 3.13+
-  * Poetry instalado
-  * Acesso a um banco GLPI MySQL ativo
-  * Acesso a API REST do GLPI (opcional, para sincronizacao da base de conhecimento)
-  * Chave de API da OpenAI (embeddings) e, opcionalmente, do DeepSeek (LLM principal)
-
------
-
-### 2. Clonar o Repositorio
+Pré-requisitos: Python 3.13+, [Poetry](https://python-poetry.org/), um GLPI com banco MySQL/MariaDB acessível e uma chave da API da OpenAI (usada nos embeddings). A chave do DeepSeek é opcional.
 
 ```bash
-git clone https://github.com/seu-usuario/glpi-sql-ai.git
-cd glpi-sql-ai
-```
-
------
-
-### 3. Instalar as Dependencias
-
-```bash
+git clone https://github.com/briellll/glpi_sql_ai.git
+cd glpi_sql_ai
 poetry install
 ```
 
------
-
-### 4. Gerar os Tokens da API do GLPI
-
-Para a integracao com a base de conhecimento, voce precisa de **dois tokens** no GLPI: o **App-Token** (identifica a aplicacao cliente) e o **User-Token** (identifica o usuario).
-
-> **Nota:** O sistema funciona sem a API do GLPI — apenas as consultas SQL e a busca vetorial em cache ja sao suficientes. A API e necessaria apenas se voce quiser sincronizar artigos diretamente do GLPI.
-
-#### 4.1 Criar o App-Token
-
-1. Acesse o GLPI com um perfil de **Super-Admin**
-2. Va em **Administracao > Configurar > API**
-3. Clique em **Adicionar cliente API**
-4. Preencha um nome (ex: `glpi-sql-ai`) e salve
-5. Anote o **App-Token** gerado (uma string longa como `Xq7pL2mN9vR4tY8wK3sD6fH1jB5cZ0aE2gU7iO4e`)
-
-![Caminho: Administracao > Configurar > API](img/glpi-api-config.png)
-
-#### 4.2 Criar o User-Token
-
-1. Va em **Administracao > Usuarios**
-2. Selecione o usuario que sera usado pela aplicacao
-3. Na aba **Tokens da API**, clique em **Adicionar token da API**
-4. De um nome ao token (ex: `app-token`)
-5. Clique em **Adicionar**
-6. Anote o **token** gerado (uma string longa como `Mz3kP8rT1yW6nB4vC9xF2hJ7qL5dS0gA8eU3oI6t`)
-
-> **Importante:** O usuario precisa ter permissao de leitura na base de conhecimento (perfil com acesso a `KnowbaseItem`). Recomenda-se um perfil Super-Admin ou um perfil customizado com essa permissao.
-
------
-
-### 5. Configurar o Ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
+Crie um arquivo `.env` na raiz do projeto (ele já está no `.gitignore`):
 
 ```env
-# Chave da OpenAI (embeddings; e LLM de fallback se o DeepSeek nao for configurado)
-OPENAI_API_KEY="sk-..."
+# OpenAI: embeddings (obrigatória) e LLM de reserva se o DeepSeek não for configurado
+OPENAI_API_KEY="sua_chave_openai"
 
-# Chave do DeepSeek (LLM principal). Se ausente, usa GPT-3.5-turbo da OpenAI.
-DEEPSEEK_API_KEY="sk-..."
+# DeepSeek: LLM principal (opcional)
+DEEPSEEK_API_KEY="sua_chave_deepseek"
 
-# Credenciais do Banco de Dados
+# Banco do GLPI (prefira um usuário somente leitura; veja Limitações e segurança)
 DB_HOST="localhost"
 DB_NAME="glpidb"
-DB_USER="root"
+DB_USER="usuario_leitura"
 DB_PASSWORD="senha"
 
-# Credenciais da API do GLPI (para sincronizacao da Base de Conhecimento)
+# API REST do GLPI (opcional; usada para sincronizar a base de conhecimento)
 GLPI_URL="http://seu-glpi/glpi"
-GLPI_APP_TOKEN="seu_app_token_aqui"
-GLPI_USER_TOKEN="seu_user_token_aqui"
+GLPI_APP_TOKEN="seu_app_token"
+GLPI_USER_TOKEN="seu_user_token"
+
+# Opcional: desliga a telemetria do ChromaDB
+ANONYMIZED_TELEMETRY=False
 ```
 
-> **Telemetria do ChromaDB:** Para desabilitar os avisos de telemetria, adicione `ANONYMIZED_TELEMETRY=False` ao `.env`.
+Sem a API do GLPI, o sistema funciona com o índice vetorial já gravado. Para usá-la, gere o App-Token em **Configurar > Geral > API** (adicionando um cliente de API) e o User-Token nas configurações do usuário (chave de acesso remoto). O usuário precisa de permissão de leitura na base de conhecimento.
 
------
-
-## Como Usar
-
-Inicie a aplicacao com:
+## Uso
 
 ```bash
 poetry run python -m glpi_sql_ai.main
 ```
 
-### Exemplo de Sessao:
+Digite a pergunta e pressione Enter; para encerrar, digite `sair`. Exemplos:
 
-```
-================================================================================
-Ola! Sou seu assistente de banco de dados GLPI.
-   Faca uma pergunta sobre os chamados ou digite 'sair' para terminar.
-================================================================================
-Voce: quantos chamados atrasados existem?
-Analisando sua pergunta...
-[SQL] Gerando SQL...
-[SQL] Executando SQL...
-Assistente: Existem atualmente 16 chamados atrasados.
+| Tipo | Pergunta |
+| --- | --- |
+| Soluções (RAG) | "soluções para o chamado 10367" |
+| Contagem | "quantos chamados atrasados existem?" |
+| Por técnico | "chamados do técnico Ana Pereira" |
+| Ranking | "top 5 técnicos com mais chamados solucionados" |
+| Fora do escopo | "quantas peças tem um carro?" (é recusada) |
 
---------------------------------------------------------------------------------
-Voce: solucoes para o chamado 10367
-Analisando sua pergunta...
-[Busca] Buscando detalhes do chamado 10367...
-[KB] Buscando informacoes na base de conhecimento...
-[Solucoes] Gerando solucoes para o chamado 10367...
+## Ambiente de teste sintético
 
-Solucoes Sugeridas:
-Artigo 1: Renovacao de certificado digital A1/A3
-1. Identifique o tipo de certificado: A1 (arquivo) ou A3 (token/cartao).
-2. Acesse o site da Autoridade Certificadora com o token conectado.
-3. No portal, localize a opcao 'Renovar Certificado' e siga o assistente.
-...
---------------------------------------------------------------------------------
-Voce: sair
-Ate a proxima!
-```
-
------
-
-## Fluxo da Aplicacao
-
-```
-[Usuario faz pergunta]
-        |
-[Supervisor: classificacao de intencao]
-        |
-[Supervisor: validacao de escopo]
-       / \
-      /   \
-[SQL Worker]                [Solutions Worker]
-     |                             |
- Gera SQL (LLM)              Extrai ID do chamado
-     |                       Busca detalhes (MySQL)
- Executa no MySQL            Busca artigos (ChromaDB)
-     |                       Gera solucoes (LLM)
- Auto-corrige (ate 3x)            |
-     |                       Resposta fiel ao artigo
- Formata resposta                 |
-     |                             |
-     \____________________________/
-                    |
-        [Resposta no terminal]
-```
-
-### Diferenca do fluxo legado
-
-O fluxo original usava chains isoladas. A versao atual usa **LangGraph** com grafo supervisor e workers com estado proprio:
-
-  * **validacao de escopo**: o no `guard_scope` no grafo supervisor intercepta perguntas alheias ao dominio helpdesk/GLPI antes que cheguem aos workers, exibindo uma recusa educada
-  * **auto-correcao de SQL**: loop interno no `sql_worker` que detecta erro, envia para o LLM corrigir e re-executa (ate 3 tentativas)
-  * **busca vetorial**: substituiu o keyword scoring por embeddings OpenAI + ChromaDB, com resultados muito mais precisos
-  * **fidelidade ao artigo**: o prompt de solucoes foi reformulado para reproduzir fielmente o conteudo dos artigos, sem inventar informacoes
-  * **tratamento robusto de erros**: tickets inexistentes ou sem ID retornam mensagens de erro claras, sem quebrar o fluxo
-
------
-
-## Ambiente de Teste (Seed)
-
-O projeto inclui scripts que populam o banco com dados de teste **sinteticos**:
+> **Atenção:** `rebuild_synthetic_data.py` **apaga todos os chamados e artigos** do banco configurado e anonimiza usuários, setores e categorias. Use somente em uma cópia de teste do GLPI, nunca em produção.
 
 ```bash
-# Ambiente completo (recomendado): limpa dados reais, anonimiza usuarios/setores
-# e gera 40 chamados + 10 artigos ficticios realistas
-poetry run python scripts/rebuild_synthetic_data.py
-
-# Ou o seed basico (7 chamados + 6 artigos), sem limpar a base existente
-poetry run python scripts/seed_test_data.py
+poetry run python scripts/rebuild_synthetic_data.py   # 40 chamados (16 atrasados) + 30 artigos, e reindexa o ChromaDB
+poetry run python scripts/anonimizar_banco.py         # remove e-mails, telefones, logins, credenciais e históricos remanescentes
 ```
 
-O `rebuild_synthetic_data.py` cria:
-  * **40 chamados** com status variados (novo, em atendimento, pendente, solucionado, fechado), dos quais **16 atrasados**
-  * **10 artigos** na base de conhecimento (`glpi_knowbaseitems`) sobre temas de suporte de TI (computador lento, reset de senha, impressora, e-mail, VPN, certificado digital, backup, rede, software)
-  * **anonimizacao** de usuarios, setores e categorias — nenhum dado pessoal real permanece
+Para trocar apenas os artigos da base de conhecimento, sem mexer nos chamados: `poetry run python scripts/reload_kb.py`. A reindexação gera embeddings e por isso exige `OPENAI_API_KEY`.
 
-> O `rebuild_synthetic_data.py` ja reindexa o ChromaDB ao final, deixando banco e indice vetorial sincronizados (requer `OPENAI_API_KEY` para gerar os embeddings).
+## Avaliação
 
-Com os dados de teste ativos, voce pode testar perguntas como:
-  * `quantos chamados atrasados existem?`
-  * `solucoes para o chamado 10367`
-  * `chamados do tecnico Ana Pereira`
+Os scripts de avaliação reproduzem os testes do trabalho sobre o ambiente sintético e gravam as saídas em `scripts/resultados/`:
 
------
+```bash
+poetry run python scripts/avaliar_rag.py               # recuperação (top-1 e similaridade) e soluções por chamado, com tempo por etapa
+poetry run python scripts/avaliar_parafrases_fluxo.py  # fluxo completo das 12 paráfrases, 3 execuções cada
+```
 
-## Exemplos de Perguntas
+Resultados na base de 30 artigos:
 
-| Tipo | Exemplo |
-| ---- | ------- |
-| Consultas | "Quantos chamados estao abertos?" |
-| Ranking | "Top 5 tecnicos com mais chamados solucionados" |
-| Atrasos | "Quantos chamados atrasados existem este mes?" |
-| Tecnicos | "Chamados do tecnico Ana Pereira" |
-| Solucoes | "Solucoes para o chamado 10367" |
+- **Consultas diretas:** artigo esperado em 1º lugar em 7 de 7.
+- **Paráfrases sem as palavras do título:** esperado em 1º lugar em 6 de 12 e entre os três enviados ao modelo em 10 de 12; na resposta final, o artigo esperado apareceu em 9 de 12.
+- **Fidelidade:** nenhum passo inventado nas respostas avaliadas; quando o artigo certo não foi recuperado, o sistema recusou ou usou um artigo parcialmente pertinente.
+- **Tempo:** mediana de cerca de 7 segundos por diagnóstico (consulta ao banco, busca e geração).
 
------
+A ordenação da busca é sensível a artigos de tema vizinho. Técnicas como reordenação (*re-ranking*) e busca híbrida são caminhos naturais de melhoria.
 
-## Como Contribuir
+## Limitações e segurança
 
-1.  Faca um fork do projeto
-2.  Crie uma branch para sua feature:
-    ```bash
-    git checkout -b feature/nova-funcionalidade
-    ```
-3.  Faca o commit das mudancas:
-    ```bash
-    git commit -m "feat: adiciona nova funcionalidade"
-    ```
-4.  Envie o PR
+- **O SQL gerado é executado com as permissões do usuário configurado.** A recusa a comandos que alteram dados depende apenas do prompt. Conecte o assistente com um usuário de banco **somente leitura**.
+- **O dicionário de negócio em `prompts.py` é específico da instância usada no trabalho:** por exemplo, filtra `entities_id = 1` e inverte os códigos de status 3 e 4 em relação ao GLPI oficial. Ajuste essas regras antes de usar em outra instância.
+- Cada consulta abre uma conexão nova (`NullPool`), escolha que estabilizou o MariaDB do ambiente de teste, mas acrescenta cerca de 2 segundos por consulta.
+- A avaliação usou uma base sintética pequena (40 chamados e 30 artigos), sem usuários reais.
 
------
+## Tecnologias
 
-## Licenca
+Python 3.13 · LangChain · LangGraph · ChromaDB · OpenAI `text-embedding-3-small` · DeepSeek V4 Flash · MySQL/MariaDB · SQLAlchemy · Poetry
 
-Distribuido sob a licenca **MIT**.
-Sinta-se livre para usar, modificar e contribuir!
+## Licença
 
------
+Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE).
