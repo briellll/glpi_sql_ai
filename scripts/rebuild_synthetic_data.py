@@ -25,8 +25,11 @@ from dotenv import load_dotenv
 random.seed(42)
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+# Os scripts de preparacao escrevem no banco: usam um usuario administrador
+# (DB_ADMIN_*), separado do usuario somente leitura do assistente (DB_USER).
 DB = dict(host=os.getenv("DB_HOST", "localhost"), database=os.getenv("DB_NAME", "glpidb"),
-          user=os.getenv("DB_USER", "root"), password=os.getenv("DB_PASSWORD", ""),
+          user=os.getenv("DB_ADMIN_USER", os.getenv("DB_USER", "root")),
+          password=os.getenv("DB_ADMIN_PASSWORD", os.getenv("DB_PASSWORD", "")),
           connection_timeout=10)
 
 NOW = datetime.now()

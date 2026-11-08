@@ -6,9 +6,42 @@ Sem side effects em tempo de importação.
 import logging
 from html import unescape
 
+import sqlglot
 from langchain_core.output_parsers import StrOutputParser
+from sqlglot import exp
 
 logger = logging.getLogger(__name__)
+
+# Tipos de comando aceitos: consultas de leitura (SELECT, inclusive com WITH,
+# e combinações por UNION, INTERSECT ou EXCEPT).
+_COMANDOS_LEITURA = (exp.Select, exp.Union, exp.Intersect, exp.Except)
+
+
+def validate_read_only(sql: str) -> None:
+    """Garante que a consulta é um único comando de leitura antes da execução.
+
+    Segunda camada de proteção do Text-to-SQL, somada ao usuário de banco
+    somente leitura: recusa comandos de escrita ou de estrutura (INSERT,
+    UPDATE, DELETE, DROP, CREATE...), múltiplos comandos e SELECT ... INTO.
+    Levanta ValueError com a explicação; o sql_worker trata o erro como os
+    demais erros de execução.
+    """
+    try:
+        comandos = [c for c in sqlglot.parse(sql, read="mysql") if c is not None]
+    except sqlglot.errors.ParseError as e:
+        raise ValueError(f"Consulta SQL não reconhecida pelo validador: {e}") from e
+
+    if len(comandos) != 1:
+        raise ValueError(
+            f"Apenas um comando SQL por consulta é permitido (recebidos: {len(comandos)})."
+        )
+    comando = comandos[0]
+    if not isinstance(comando, _COMANDOS_LEITURA):
+        raise ValueError(
+            f"Apenas consultas de leitura (SELECT) são permitidas; recebido: {comando.key.upper()}."
+        )
+    if comando.find(exp.Into):
+        raise ValueError("SELECT ... INTO não é permitido.")
 
 
 def create_sql_chain(llm):
@@ -64,6 +97,7 @@ def run_query(db, query: str) -> str:
     e confiável.
     """
     cleaned = query.strip().replace("```sql", "").replace("```", "").strip()
+    validate_read_only(cleaned)
 
     # exec_driver_sql: passa o SQL direto ao driver, sem interpretar ':' ou '%'
     # como parâmetros (comum em literais de data/hora e cláusulas LIKE).

@@ -31,8 +31,9 @@ load_dotenv(
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
     "database": os.getenv("DB_NAME", "glpidb"),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    # usuario administrador (escreve no banco), separado do usuario do assistente
+    "user": os.getenv("DB_ADMIN_USER", os.getenv("DB_USER", "root")),
+    "password": os.getenv("DB_ADMIN_PASSWORD", os.getenv("DB_PASSWORD", "")),
     "connection_timeout": 5,
 }
 

@@ -9,7 +9,8 @@ Projeto desenvolvido como Trabalho de Conclusão de Curso do Bacharelado em Sist
 ## Funcionalidades
 
 - **Soluções para um chamado (fluxo principal, RAG).** Para "soluções para o chamado 10367", o sistema busca o chamado no banco, recupera os três artigos mais próximos na base de conhecimento por busca semântica (ChromaDB + embeddings da OpenAI) e gera os passos de solução. O prompt aplica *grounding*: a resposta deve usar apenas o conteúdo dos artigos recuperados e citar o artigo de origem; se nenhum artigo for pertinente, o modelo declara a ausência em vez de inventar.
-- **Consultas em linguagem natural (Text-to-SQL).** Para "quantos chamados atrasados existem?", o modelo gera a consulta SQL, que é executada no MySQL do GLPI; em caso de erro, a consulta é corrigida automaticamente (até 3 tentativas) e o resultado é devolvido em linguagem natural.
+- **Consultas em linguagem natural (Text-to-SQL).** Para "quantos chamados atrasados existem?", o modelo gera a consulta SQL, que é validada e executada no MySQL do GLPI; em caso de erro, a consulta é corrigida automaticamente (até 3 tentativas) e o resultado é devolvido em linguagem natural.
+- **Proteção contra escrita no banco, em duas camadas que não dependem do modelo.** Antes da execução, a consulta é analisada com o [sqlglot](https://github.com/tobymao/sqlglot) e só é aceita se for um único comando de leitura (`SELECT`); comandos de escrita ou de estrutura, múltiplos comandos e `SELECT ... INTO` são recusados. Além disso, o assistente se conecta com um usuário de banco que só tem permissão de `SELECT`.
 - **Classificação de intenção.** Um supervisor decide se a pergunta é uma consulta aos dados ou um pedido de soluções.
 - **Guardião de escopo.** Perguntas fora do domínio de helpdesk são bloqueadas antes de chegar aos *workers*. O bloqueio é o padrão: a pergunta só passa se o modelo a classificar explicitamente como dentro do escopo.
 - **Verificador de frescor da base de conhecimento.** Na inicialização, o sistema compara a contagem de artigos e a data da última modificação no MySQL com os metadados da última sincronização. Se nada mudou, usa o índice vetorial já gravado e não chama a API do GLPI.
@@ -52,7 +53,7 @@ glpi_sql_ai/
 │   │   ├── supervisor.py           # Grafo supervisor: intenção, guardião de escopo e roteamento
 │   │   ├── sql_worker.py           # Text-to-SQL com autocorreção
 │   │   └── solutions_worker.py     # Fluxo RAG de soluções
-│   ├── chains.py                   # Cadeias LangChain (prompt | llm | parser)
+│   ├── chains.py                   # Cadeias LangChain e execução validada do SQL (validate_read_only)
 │   ├── prompts.py                  # Prompts, dicionário de negócio e regras de grounding
 │   ├── vector_store.py             # ChromaDB + text-embedding-3-small
 │   ├── knowledge_base.py           # API REST do GLPI e montagem do contexto RAG
@@ -69,6 +70,7 @@ glpi_sql_ai/
 │   ├── avaliar_parafrases_fluxo.py # Avaliação: fluxo completo com 12 paráfrases × 3 execuções
 │   └── resultados/                 # Saídas das avaliações
 └── tests/
+    └── test_validate_read_only.py  # Testes do validador de SQL
 ```
 
 ## Instalação
@@ -81,6 +83,13 @@ cd glpi_sql_ai
 poetry install
 ```
 
+Crie no banco um usuário somente leitura para o assistente (troque a senha):
+
+```sql
+CREATE USER 'glpi_ai_leitura'@'localhost' IDENTIFIED BY 'uma_senha_forte';
+GRANT SELECT ON glpidb.* TO 'glpi_ai_leitura'@'localhost';
+```
+
 Crie um arquivo `.env` na raiz do projeto (ele já está no `.gitignore`):
 
 ```env
@@ -90,11 +99,15 @@ OPENAI_API_KEY="sua_chave_openai"
 # DeepSeek: LLM principal (opcional)
 DEEPSEEK_API_KEY="sua_chave_deepseek"
 
-# Banco do GLPI (prefira um usuário somente leitura; veja Limitações e segurança)
+# Banco do GLPI: usuário somente leitura, usado pelo assistente
 DB_HOST="localhost"
 DB_NAME="glpidb"
-DB_USER="usuario_leitura"
-DB_PASSWORD="senha"
+DB_USER="glpi_ai_leitura"
+DB_PASSWORD="uma_senha_forte"
+
+# Usuário administrador, usado apenas pelos scripts que montam o ambiente de teste
+DB_ADMIN_USER="root"
+DB_ADMIN_PASSWORD=""
 
 # API REST do GLPI (opcional; usada para sincronizar a base de conhecimento)
 GLPI_URL="http://seu-glpi/glpi"
@@ -132,7 +145,7 @@ poetry run python scripts/rebuild_synthetic_data.py   # 40 chamados (16 atrasado
 poetry run python scripts/anonimizar_banco.py         # remove e-mails, telefones, logins, credenciais e históricos remanescentes
 ```
 
-Para trocar apenas os artigos da base de conhecimento, sem mexer nos chamados: `poetry run python scripts/reload_kb.py`. A reindexação gera embeddings e por isso exige `OPENAI_API_KEY`.
+Para trocar apenas os artigos da base de conhecimento, sem mexer nos chamados: `poetry run python scripts/reload_kb.py`. A reindexação gera embeddings e por isso exige `OPENAI_API_KEY`. Esses scripts escrevem no banco e por isso usam o usuário administrador (`DB_ADMIN_USER`); sem ele, recorrem a `DB_USER`.
 
 ## Avaliação
 
@@ -152,16 +165,22 @@ Resultados na base de 30 artigos:
 
 A ordenação da busca é sensível a artigos de tema vizinho. Técnicas como reordenação (*re-ranking*) e busca híbrida são caminhos naturais de melhoria.
 
+Os testes automatizados do validador de SQL rodam com:
+
+```bash
+poetry run python -m pytest tests -q
+```
+
 ## Limitações e segurança
 
-- **O SQL gerado é executado com as permissões do usuário configurado.** A recusa a comandos que alteram dados depende apenas do prompt. Conecte o assistente com um usuário de banco **somente leitura**.
+- **Conecte o assistente sempre com um usuário de banco somente leitura** (veja Instalação). O validador recusa comandos de escrita antes da execução, mas a permissão do banco é a barreira que não depende de código; as duas camadas juntas impedem alterações nos dados. A leitura continua permitida: uma pergunta pode trazer qualquer dado do banco do GLPI que o usuário configurado consiga ler.
 - **O dicionário de negócio em `prompts.py` é específico da instância usada no trabalho:** por exemplo, filtra `entities_id = 1` e inverte os códigos de status 3 e 4 em relação ao GLPI oficial. Ajuste essas regras antes de usar em outra instância.
 - Cada consulta abre uma conexão nova (`NullPool`), escolha que estabilizou o MariaDB do ambiente de teste, mas acrescenta cerca de 2 segundos por consulta.
 - A avaliação usou uma base sintética pequena (40 chamados e 30 artigos), sem usuários reais.
 
 ## Tecnologias
 
-Python 3.13 · LangChain · LangGraph · ChromaDB · OpenAI `text-embedding-3-small` · DeepSeek V4 Flash · MySQL/MariaDB · SQLAlchemy · Poetry
+Python 3.13 · LangChain · LangGraph · ChromaDB · OpenAI `text-embedding-3-small` · DeepSeek V4 Flash · MySQL/MariaDB · SQLAlchemy · sqlglot · pytest · Poetry
 
 ## Licença
 
