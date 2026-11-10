@@ -63,7 +63,6 @@ glpi_sql_ai/
 │   └── services.py                 # Utilitários
 ├── scripts/
 │   ├── rebuild_synthetic_data.py   # Recria o ambiente de teste sintético (APAGA dados reais)
-│   ├── anonimizar_banco.py         # Remove dados pessoais e credenciais remanescentes
 │   ├── reload_kb.py                # Recarrega só a base de conhecimento (30 artigos)
 │   ├── seed_test_data.py           # Seed básico, sem limpar a base
 │   ├── avaliar_rag.py              # Avaliação: recuperação e geração de soluções, com tempos
@@ -142,7 +141,6 @@ Digite a pergunta e pressione Enter; para encerrar, digite `sair`. Exemplos:
 
 ```bash
 poetry run python scripts/rebuild_synthetic_data.py   # 40 chamados (16 atrasados) + 30 artigos, e reindexa o ChromaDB
-poetry run python scripts/anonimizar_banco.py         # remove e-mails, telefones, logins, credenciais e históricos remanescentes
 ```
 
 Para trocar apenas os artigos da base de conhecimento, sem mexer nos chamados: `poetry run python scripts/reload_kb.py`. A reindexação gera embeddings e por isso exige `OPENAI_API_KEY`. Esses scripts escrevem no banco e por isso usam o usuário administrador (`DB_ADMIN_USER`); sem ele, recorrem a `DB_USER`.

@@ -9,9 +9,7 @@ grupos) para que nenhum dado pessoal/organizacional real permaneca no banco.
 Uso:
     poetry run python scripts/rebuild_synthetic_data.py
 
-Depois, rode scripts/anonimizar_banco.py (remove e-mails, telefones, logins,
-credenciais e historicos reais que este script nao cobre), reindexe a base
-vetorial e rode os testes.
+Depois, reindexe a base vetorial e rode os testes.
 """
 
 import os

@@ -204,7 +204,7 @@ class AppContext:
                     "[AVISO] GLPI_URL ou GLPI_USER_TOKEN nao configurados no .env"
                 )
                 logger.warning(
-                    "   O sistema funcionará apenas com seu conhecimento proprio."
+                    "   Os diagnosticos ficarao sem artigos da base de conhecimento."
                 )
             return
 
@@ -248,7 +248,7 @@ class AppContext:
                 )
             else:
                 logger.warning(
-                    "   O sistema funcionara apenas com seu conhecimento proprio."
+                    "   Os diagnosticos ficarao sem artigos da base de conhecimento."
                 )
 
     def shutdown(self):
