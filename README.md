@@ -82,11 +82,19 @@ cd glpi_sql_ai
 poetry install
 ```
 
-Crie no banco um usuário somente leitura para o assistente (troque a senha):
+Crie no banco um usuário somente leitura para o assistente (troque a senha). A permissão vale só para as tabelas que o assistente consulta e, na tabela de usuários, só para as colunas de nome, de modo que senhas, tokens de API e configurações do GLPI ficam fora do alcance das consultas geradas:
 
 ```sql
 CREATE USER 'glpi_ai_leitura'@'localhost' IDENTIFIED BY 'uma_senha_forte';
-GRANT SELECT ON glpidb.* TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_tickets        TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_tickets_users  TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_entities       TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_locations      TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_itilcategories TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_groups         TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_groups_tickets TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT ON glpidb.glpi_knowbaseitems  TO 'glpi_ai_leitura'@'localhost';
+GRANT SELECT (id, name, firstname, realname) ON glpidb.glpi_users TO 'glpi_ai_leitura'@'localhost';
 ```
 
 Crie um arquivo `.env` na raiz do projeto (ele já está no `.gitignore`):

@@ -156,6 +156,10 @@ class AppContext:
                     "connection_timeout": 10,
                 },
             },
+            # Sem reflexao do schema na inicializacao: as consultas usam a engine
+            # diretamente, e o usuario somente leitura nao tem permissao de
+            # SHOW CREATE TABLE nas tabelas com acesso restrito por coluna.
+            lazy_table_reflection=True,
         )
         logger.info("[DB] Banco de dados conectado com sucesso.")
 
